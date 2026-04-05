@@ -1,0 +1,43 @@
+{{ define "main" }}
+<article class="single session-detail">
+  <header>
+    <h1>{{ .Title }}</h1>
+    <div class="session-meta">
+      {{ if .Params.genre }}<span class="badge genre-{{ .Params.genre }}">{{ .Params.genre }}</span>{{ end }}
+      {{ if .Params.curriculum_stage }}<span class="badge badge-stage">{{ .Params.curriculum_stage }}</span>{{ end }}
+      <time>{{ .Date.Format "January 2, 2006" }}</time>
+      {{ if .Params.duration }}<span class="muted">&middot; {{ .Params.duration }}</span>{{ end }}
+    </div>
+  </header>
+
+  {{ if .Params.intent }}
+  <section class="intent-block">
+    <h2>Intent</h2>
+    <blockquote class="intent">{{ .Params.intent }}</blockquote>
+    {{ if .Params.rationale }}<p class="rationale">{{ .Params.rationale }}</p>{{ end }}
+  </section>
+  {{ end }}
+
+  <div class="content">
+    {{ .Content }}
+  </div>
+
+  {{ if .Params.fingerprint }}
+  <section class="fingerprint-section">
+    <h2>Fingerprint</h2>
+    {{ partial "fingerprint-chart.html" (dict "scores" .Params.fingerprint) }}
+  </section>
+  {{ end }}
+
+  {{ if .Params.audio }}
+  <section class="audio-section">
+    <h2>Audio</h2>
+    {{ partial "audio-player.html" (dict "src" .Params.audio "title" .Title) }}
+  </section>
+  {{ end }}
+
+  {{ if .Params.map_state_date }}
+  <p class="link-map"><a href="/map-states/{{ .Params.map_state_date | urlize }}/">View MAP-States &rarr;</a></p>
+  {{ end }}
+</article>
+{{ end }}

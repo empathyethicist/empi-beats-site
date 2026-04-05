@@ -1,0 +1,13 @@
+{{ define "main" }}
+<section class="section">
+  <h1>{{ .Title }}</h1>
+  {{ .Content }}
+  {{ range .Pages.ByDate.Reverse }}
+  <article class="card">
+    <h2><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
+    <time>{{ .Date.Format "January 2, 2006" }}</time>
+    {{ if .Params.frame_count }}<span class="muted">&middot; {{ .Params.frame_count }} frames</span>{{ end }}
+  </article>
+  {{ end }}
+</section>
+{{ end }}

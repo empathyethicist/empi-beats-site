@@ -1,0 +1,6 @@
+{{/* Expects: .frames (JSON string of frame data) */}}
+<div id="swimlane-chart" class="swimlane-container" data-frames='{{ .frames | safeHTMLAttr }}'>
+  <noscript>
+    <p class="muted">MAP-state timeline requires JavaScript.</p>
+  </noscript>
+</div>

@@ -1,0 +1,558 @@
+/* EMPI Beats — Dark theme inspired by EMPI House pixel art palettes */
+
+:root {
+  --bg: #0a0f1a;
+  --surface: #182a3c;
+  --text: #f0fafc;
+  --accent: #d49050;
+  --muted: #82d0dc;
+  --link: #eabc78;
+  --link-hover: #d49050;
+  --border: #243a50;
+  --max-width: 800px;
+
+  /* Genre accent colors */
+  --warm-house: #d49050;
+  --cool-ambient: #48a0b0;
+  --trap-hard: #a24898;
+  --soul-gold: #d0a048;
+  --boombap-dust: #948852;
+
+  /* MAP-state colors */
+  --state-dwell: #48a0b0;
+  --state-shift: #4CAF50;
+  --state-conflict: #f44336;
+  --state-anticipation: #FFC107;
+  --state-transition: #9E9E9E;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.65;
+  min-height: 100vh;
+}
+
+/* Container */
+.container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* Navigation */
+.nav {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.nav-inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 3.5rem;
+}
+
+.nav-brand {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.nav-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.nav-links {
+  display: flex;
+  list-style: none;
+  gap: 1.5rem;
+}
+
+.nav-links a {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: color 0.15s;
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+  color: var(--accent);
+}
+
+/* Hero */
+.hero {
+  padding: 4rem 0 2rem;
+  text-align: center;
+}
+
+.hero h1 {
+  font-size: 2.5rem;
+  color: var(--accent);
+  margin-bottom: 0.5rem;
+}
+
+.hero-sub {
+  font-size: 1.2rem;
+  color: var(--muted);
+  margin-bottom: 1rem;
+}
+
+.hero-desc {
+  color: var(--text);
+  opacity: 0.85;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Sections */
+.section {
+  padding: 2rem 0;
+}
+
+.section h2 {
+  font-size: 1.4rem;
+  color: var(--accent);
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+}
+
+/* Cards */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  transition: border-color 0.15s;
+}
+
+.card:hover {
+  border-color: var(--accent);
+}
+
+.card h2, .card h3 {
+  margin-bottom: 0.4rem;
+}
+
+.card h2 a, .card h3 a {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.card h2 a:hover, .card h3 a:hover {
+  color: var(--link);
+}
+
+.card-header {
+  margin-bottom: 0.5rem;
+}
+
+.card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.card.featured {
+  border-color: var(--accent);
+  border-width: 2px;
+}
+
+/* Single pages */
+.single {
+  padding: 2rem 0 4rem;
+}
+
+.single header {
+  margin-bottom: 2rem;
+}
+
+.single h1 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.single time {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.content {
+  line-height: 1.75;
+}
+
+.content h2 {
+  color: var(--accent);
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.content h3 {
+  color: var(--link);
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.content p {
+  margin-bottom: 1rem;
+}
+
+.content ul, .content ol {
+  margin-bottom: 1rem;
+  padding-left: 1.5rem;
+}
+
+.content li {
+  margin-bottom: 0.3rem;
+}
+
+.content blockquote {
+  border-left: 3px solid var(--accent);
+  padding: 0.75rem 1rem;
+  margin: 1rem 0;
+  background: rgba(212, 144, 80, 0.08);
+  color: var(--muted);
+}
+
+.content code {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  background: var(--surface);
+  padding: 0.15em 0.4em;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+.content pre {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1rem;
+  overflow-x: auto;
+  margin-bottom: 1rem;
+}
+
+.content pre code {
+  background: none;
+  padding: 0;
+}
+
+.content a {
+  color: var(--link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.content a:hover {
+  color: var(--link-hover);
+}
+
+/* Badges */
+.badge {
+  display: inline-block;
+  padding: 0.15em 0.6em;
+  border-radius: 3px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  background: var(--border);
+  color: var(--text);
+}
+
+.genre-warm_house { background: var(--warm-house); color: #0a0f1a; }
+.genre-cool_ambient { background: var(--cool-ambient); color: #0a0f1a; }
+.genre-trap_hard { background: var(--trap-hard); color: #f0fafc; }
+.genre-soul_gold { background: var(--soul-gold); color: #0a0f1a; }
+.genre-boombap_dust { background: var(--boombap-dust); color: #0a0f1a; }
+
+.badge-stage {
+  background: var(--border);
+  color: var(--muted);
+}
+
+.badge-score {
+  background: var(--border);
+  color: var(--accent);
+}
+
+.badge-status-success { background: #2d5a3d; color: #a0e8b8; }
+.badge-status-failed { background: #5a2d2d; color: #e8a0a0; }
+.badge-status-pending { background: #5a4e2d; color: #e8d8a0; }
+
+/* Intent block */
+.intent {
+  border-left: 3px solid var(--accent);
+  padding: 0.5rem 1rem;
+  margin: 0.5rem 0;
+  background: rgba(212, 144, 80, 0.08);
+  color: var(--muted);
+  font-style: italic;
+}
+
+.intent-block {
+  margin-bottom: 2rem;
+}
+
+.rationale {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+/* Callouts */
+.callout {
+  background: rgba(72, 160, 176, 0.1);
+  border: 1px solid var(--cool-ambient);
+  border-radius: 6px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.callout-warn {
+  color: #FFC107;
+}
+
+.contradiction-list {
+  list-style: none;
+  padding: 0;
+}
+
+.contradiction-list li {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.contradiction-list li::before {
+  content: "\26A0";
+  margin-right: 0.5rem;
+}
+
+/* Audio player */
+.audio-player {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  margin: 0.5rem 0;
+}
+
+.audio-title {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 0.4rem;
+}
+
+.audio-player audio {
+  width: 100%;
+  height: 36px;
+}
+
+/* Music grid */
+.music-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+/* Fingerprint chart */
+.fingerprint-section, .audio-section {
+  margin: 2rem 0;
+}
+
+.fingerprint-chart {
+  display: flex;
+  justify-content: center;
+  padding: 1rem 0;
+}
+
+/* Swimlane */
+.swimlane-container {
+  margin: 1rem 0;
+  overflow-x: auto;
+}
+
+#swimlane-chart {
+  min-height: 200px;
+}
+
+/* Activity list */
+.activity-list {
+  list-style: none;
+  padding: 0;
+}
+
+.activity-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.activity-list a {
+  color: var(--link);
+  text-decoration: none;
+  flex: 1;
+}
+
+.activity-list a:hover {
+  color: var(--link-hover);
+}
+
+.activity-list time {
+  color: var(--muted);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+/* Links */
+.link-map {
+  margin-top: 2rem;
+}
+
+.link-map a {
+  color: var(--link);
+  text-decoration: none;
+}
+
+.link-map a:hover {
+  color: var(--link-hover);
+}
+
+/* Muted */
+.muted {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 2rem 0;
+  list-style: none;
+}
+
+.pagination li a,
+.pagination li span {
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+
+.pagination li.active span {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+}
+
+.pagination li a:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Footer */
+.footer {
+  border-top: 1px solid var(--border);
+  padding: 2rem 0;
+  margin-top: 4rem;
+  text-align: center;
+  font-size: 0.85rem;
+}
+
+.footer a {
+  color: var(--link);
+  text-decoration: none;
+}
+
+.footer a:hover {
+  color: var(--link-hover);
+}
+
+/* Session meta */
+.session-meta, .reflection-meta, .music-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+/* Mobile responsive */
+@media (max-width: 640px) {
+  .nav-toggle {
+    display: block;
+  }
+
+  .nav-links {
+    display: none;
+    position: absolute;
+    top: 3.5rem;
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    flex-direction: column;
+    padding: 1rem 1.5rem;
+    gap: 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-inner.open .nav-links {
+    display: flex;
+  }
+
+  .hero h1 {
+    font-size: 1.8rem;
+  }
+
+  .hero-sub {
+    font-size: 1rem;
+  }
+
+  .single h1 {
+    font-size: 1.5rem;
+  }
+
+  .music-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .container {
+    padding: 0 1rem;
+  }
+}

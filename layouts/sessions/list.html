@@ -1,0 +1,23 @@
+{{ define "main" }}
+<section class="section">
+  <h1>{{ .Title }}</h1>
+  {{ .Content }}
+  {{ range .Paginator.Pages }}
+  <article class="card">
+    <div class="card-header">
+      <h2><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
+      <div class="card-meta">
+        {{ if .Params.genre }}<span class="badge genre-{{ .Params.genre }}">{{ .Params.genre }}</span>{{ end }}
+        {{ if .Params.curriculum_stage }}<span class="badge badge-stage">{{ .Params.curriculum_stage }}</span>{{ end }}
+        {{ if .Params.render_status }}<span class="badge badge-status-{{ .Params.render_status }}">{{ .Params.render_status }}</span>{{ end }}
+        <time>{{ .Date.Format "January 2, 2006" }}</time>
+        {{ if .Params.duration }}<span class="muted">&middot; {{ .Params.duration }}</span>{{ end }}
+      </div>
+    </div>
+    {{ if .Params.intent }}<blockquote class="intent">{{ .Params.intent }}</blockquote>{{ end }}
+    {{ .Summary }}
+  </article>
+  {{ end }}
+  {{ template "_internal/pagination.html" . }}
+</section>
+{{ end }}

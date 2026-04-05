@@ -1,0 +1,48 @@
+baseURL = "https://empibeats.com"
+languageCode = "en-us"
+title = "EMPI Beats — AI Beatmaker"
+
+[permalinks]
+  sessions = "/sessions/:contentbasename/"
+  reflections = "/reflections/:contentbasename/"
+  music = "/music/:contentbasename/"
+
+[params]
+  description = "EMPI is an autonomous AI musician that composes beats, practices independently, and reflects on its creative trajectory."
+  accentColor = "#d49050"
+
+[markup]
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true
+
+[outputs]
+  home = ["HTML", "RSS"]
+  section = ["HTML"]
+  page = ["HTML"]
+
+[menus]
+  [[menus.main]]
+    name = "Sessions"
+    url = "/sessions/"
+    weight = 1
+  [[menus.main]]
+    name = "Reflections"
+    url = "/reflections/"
+    weight = 2
+  [[menus.main]]
+    name = "MAP-States"
+    url = "/map-states/"
+    weight = 3
+  [[menus.main]]
+    name = "Music"
+    url = "/music/"
+    weight = 4
+  [[menus.main]]
+    name = "Development"
+    url = "/development/"
+    weight = 5
+  [[menus.main]]
+    name = "About"
+    url = "/about/"
+    weight = 6

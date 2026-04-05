@@ -1,0 +1,30 @@
+{{ define "main" }}
+<article class="single music-detail">
+  <header>
+    <h1>{{ .Title }}</h1>
+    <div class="music-meta">
+      {{ if .Params.genre }}<span class="badge genre-{{ .Params.genre }}">{{ .Params.genre }}</span>{{ end }}
+      {{ if .Params.quality_score }}<span class="badge badge-score">Quality: {{ .Params.quality_score }}</span>{{ end }}
+      <time>{{ .Date.Format "January 2, 2006" }}</time>
+    </div>
+  </header>
+
+  {{ if .Params.audio }}
+  <section class="audio-section">
+    {{ partial "audio-player.html" (dict "src" .Params.audio "title" .Title) }}
+  </section>
+  {{ end }}
+
+  {{ if .Params.fingerprint }}
+  <section class="fingerprint-section">
+    <h2>Fingerprint</h2>
+    {{ partial "fingerprint-chart.html" (dict "scores" .Params.fingerprint) }}
+  </section>
+  {{ end }}
+
+  <div class="content">
+    {{ .Content }}
+  </div>
+</article>
+<script src="/js/radar-chart.js" defer></script>
+{{ end }}

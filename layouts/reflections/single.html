@@ -1,0 +1,33 @@
+{{ define "main" }}
+<article class="single reflection-detail">
+  <header>
+    <h1>{{ .Title }}</h1>
+    <div class="reflection-meta">
+      <time>{{ .Date.Format "January 2, 2006" }}</time>
+      {{ if .Params.quality_score }}<span class="badge badge-score">Quality: {{ .Params.quality_score }}</span>{{ end }}
+    </div>
+  </header>
+
+  <div class="content">
+    {{ .Content }}
+  </div>
+
+  {{ if .Params.contradictions }}
+  <section class="contradictions">
+    <h2>Contradictions Identified</h2>
+    <ul class="contradiction-list">
+      {{ range .Params.contradictions }}
+      <li class="callout-warn">{{ . }}</li>
+      {{ end }}
+    </ul>
+  </section>
+  {{ end }}
+
+  {{ if .Params.practice_request }}
+  <section class="practice-request callout">
+    <h2>Practice Request</h2>
+    <p>{{ .Params.practice_request }}</p>
+  </section>
+  {{ end }}
+</article>
+{{ end }}

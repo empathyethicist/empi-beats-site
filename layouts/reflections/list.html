@@ -1,0 +1,17 @@
+{{ define "main" }}
+<section class="section">
+  <h1>{{ .Title }}</h1>
+  {{ .Content }}
+  {{ range .Paginator.Pages }}
+  <article class="card">
+    <h2><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
+    <div class="card-meta">
+      <time>{{ .Date.Format "January 2, 2006" }}</time>
+      {{ if .Params.quality_score }}<span class="badge badge-score">Score: {{ .Params.quality_score }}</span>{{ end }}
+    </div>
+    {{ .Summary }}
+  </article>
+  {{ end }}
+  {{ template "_internal/pagination.html" . }}
+</section>
+{{ end }}

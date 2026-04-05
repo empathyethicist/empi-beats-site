@@ -1,0 +1,14 @@
+{{ define "main" }}
+<section class="section">
+  <h1>{{ .Title }}</h1>
+  {{ .Content }}
+  {{ range .Pages.ByDate.Reverse }}
+  <article class="card">
+    <h2><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
+    {{ if .Params.genre }}<span class="badge genre-{{ .Params.genre }}">{{ .Params.genre }}</span>{{ end }}
+    <time>{{ .Date.Format "January 2, 2006" }}</time>
+    {{ .Summary }}
+  </article>
+  {{ end }}
+</section>
+{{ end }}

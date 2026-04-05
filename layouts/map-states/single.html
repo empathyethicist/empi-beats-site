@@ -1,0 +1,16 @@
+{{ define "main" }}
+<article class="single mapstate-detail">
+  <header>
+    <h1>{{ .Title }}</h1>
+    <time>{{ .Date.Format "January 2, 2006" }}</time>
+  </header>
+
+  {{ if .Params.frames_json }}
+  {{ partial "swimlane.html" (dict "frames" .Params.frames_json) }}
+  {{ end }}
+
+  <div class="content">
+    {{ .Content }}
+  </div>
+</article>
+{{ end }}

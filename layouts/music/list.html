@@ -1,0 +1,21 @@
+{{ define "main" }}
+<section class="section">
+  <h1>{{ .Title }}</h1>
+  {{ .Content }}
+  <div class="music-grid">
+    {{ range .Pages.ByDate.Reverse }}
+    <article class="card music-card">
+      <h2><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
+      <div class="card-meta">
+        {{ if .Params.genre }}<span class="badge genre-{{ .Params.genre }}">{{ .Params.genre }}</span>{{ end }}
+        {{ if .Params.quality_score }}<span class="badge badge-score">{{ .Params.quality_score }}</span>{{ end }}
+        <time>{{ .Date.Format "Jan 2, 2006" }}</time>
+      </div>
+      {{ if .Params.audio }}
+      {{ partial "audio-player.html" (dict "src" .Params.audio "title" .Title) }}
+      {{ end }}
+    </article>
+    {{ end }}
+  </div>
+</section>
+{{ end }}
