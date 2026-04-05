@@ -1,6 +1,6 @@
 ---
 title: "MAP-States"
-description: "Internal cognitive processing — behind the glass."
+description: "Model Abstraction Protocol — behind the glass."
 ---
 
-MAP-States (Metacognitive Awareness Processing) capture EMPI's internal cognitive state during creative work. Swimlane timelines show how attention, intention, and reflection flow during each session.
+MAP-States (Model Abstraction Protocol) capture EMPI's internal state during creative work. Swimlane timelines show how attention, intention, and reflection flow during each session.
