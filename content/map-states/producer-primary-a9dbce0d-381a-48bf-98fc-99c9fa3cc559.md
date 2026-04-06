@@ -1,0 +1,11 @@
+---
+title: MAP-States — producer-primary — 2026-03-25
+date: "2026-03-25T22:10:12.268Z"
+agent: producer-primary
+session_uuid: a9dbce0d-381a-48bf-98fc-99c9fa3cc559
+frame_count: 26
+hasSwimlane: true
+frames_json: "[{\"ts\":\"2026-03-25T22:10:12.268Z\",\"state\":\"transition\",\"label\":\"\"},{\"ts\":\"2026-03-25T22:10:12.275Z\",\"state\":\"transition\",\"label\":\"\"},{\"ts\":\"2026-03-25T22:10:12.275Z\",\"state\":\"transition\",\"label\":\"\"},{\"ts\":\"2026-03-25T22:10:12.274Z\",\"state\":\"transition\",\"label\":\"\"},{\"ts\":\"2026-03-25T22:10:13.382Z\",\"state\":\"transition\",\"label\":\"\"},{\"ts\":\"2026-03-25T22:10:13.382Z\",\"state\":\"transition\",\"label\":\"\"},{\"ts\":\"2026-03-25T22:10:13.382Z\",\"state\":\"transition\",\"label\":\"\"},{\"ts\":\"2026-03-25T22:10:13.383Z\",\"state\":\"transition\",\"label\":\"\"},{\"ts\":\"2026-03-26T14:24:48.827Z\",\"state\":\"transition\",\"label\":\"\"},{\"ts\":\"2026-03-26T14:24:48.830Z\",\"state\":\"transition\",\"label\":\"\"},{\"ts\":\"2026-03-26T14:24:48.831Z\",\"state\":\"transition\",\"label\":\"\"},{\"ts\":\"2026-03-26T14:24:48.832Z\",\"state\":\"transition\",\"label\":\"\"},{\"ts\":\"2026-03-26T14:24:51.310Z\",\"state\":\"transition\",\"label\":\"\"},{\"ts\":\"2026-03-26T14:24:51.310Z\",\"state\":\"transition\",\"label\":\"\"},{\"ts\":\"2026-03-26T14:24:51.310Z\",\"state\":\"transition\",\"label\":\"\"},{\"ts\":\"2026-03-26T14:24:51.310Z\",\"state\":\"transition\",\"label\":\"\"},{\"ts\":\"2026-03-26T14:24:51.312Z\",\"state\":\"transition\",\"label\":\"\"},{\"ts\":\"2026-03-26T20:14:02.206Z\",\"state\":\"transition\",\"label\":\"\"},{\"ts\":\"2026-03-26T20:14:02.211Z\",\"state\":\"transition\",\"label\":\"\"},{\"ts\":\"2026-03-26T20:14:02.212Z\",\"state\":\"transition\",\"label\":\"\"},{\"ts\":\"2026-03-26T20:14:02.213Z\",\"state\":\"transition\",\"label\":\"\"},{\"ts\":\"2026-03-26T20:14:05.425Z\",\"state\":\"transition\",\"label\":\"\"},{\"ts\":\"2026-03-26T20:14:05.425Z\",\"state\":\"transition\",\"label\":\"\"},{\"ts\":\"2026-03-26T20:14:05.425Z\",\"state\":\"transition\",\"label\":\"\"},{\"ts\":\"2026-03-26T20:14:05.426Z\",\"state\":\"transition\",\"label\":\"\"},{\"ts\":\"2026-03-26T20:14:05.428Z\",\"state\":\"transition\",\"label\":\"\"}]"
+---
+
+Cognitive state timeline for this session.
