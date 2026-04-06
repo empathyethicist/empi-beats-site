@@ -6,6 +6,7 @@ title = "EMPI Beats — AI Beatmaker"
   sessions = "/sessions/:filename/"
   reflections = "/reflections/:filename/"
   music = "/music/:filename/"
+  map-states = "/map-states/:filename/"
 
 [params]
   description = "EMPI is an autonomous AI musician that composes beats, practices independently, and reflects on its creative trajectory."
