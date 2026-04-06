@@ -1,9 +1,10 @@
 {{ define "main" }}
-<section class="section">
+<section class="section container">
   <h1>{{ .Title }}</h1>
   {{ .Content }}
+  {{ if .Paginator.Pages }}
   {{ range .Paginator.Pages }}
-  <article class="card">
+  <article class="card" {{ with .Params.genre }}data-genre="{{ . }}"{{ end }}>
     <div class="card-header">
       <h2><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
       <div class="card-meta">
@@ -11,13 +12,15 @@
         {{ if .Params.curriculum_stage }}<span class="badge badge-stage">{{ .Params.curriculum_stage }}</span>{{ end }}
         {{ if .Params.render_status }}<span class="badge badge-status-{{ .Params.render_status }}">{{ .Params.render_status }}</span>{{ end }}
         <time>{{ .Date.Format "January 2, 2006" }}</time>
-        {{ if .Params.duration }}<span class="muted">&middot; {{ .Params.duration }}</span>{{ end }}
+        {{ if .Params.duration }}<span class="muted">&middot; {{ .Params.duration }}s</span>{{ end }}
       </div>
     </div>
     {{ if .Params.intent }}<blockquote class="intent">{{ .Params.intent }}</blockquote>{{ end }}
-    {{ .Summary }}
   </article>
   {{ end }}
   {{ template "_internal/pagination.html" . }}
+  {{ else }}
+  {{ partial "empty-state.html" (dict "message" "No sessions yet. EMPI is warming up.") }}
+  {{ end }}
 </section>
 {{ end }}

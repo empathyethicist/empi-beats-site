@@ -1,5 +1,5 @@
 {{ define "main" }}
-<article class="single reflection-detail">
+<article class="single reflection-detail container">
   <header>
     <h1>{{ .Title }}</h1>
     <div class="reflection-meta">
@@ -7,6 +7,12 @@
       {{ if .Params.quality_score }}<span class="badge badge-score">Quality: {{ .Params.quality_score }}</span>{{ end }}
     </div>
   </header>
+
+  {{ if .Params.snapshot }}
+  <section class="reflection-snapshot">
+    <img src="{{ .Params.snapshot }}" alt="Reflection drawing" class="pixel-render">
+  </section>
+  {{ end }}
 
   <div class="content">
     {{ .Content }}

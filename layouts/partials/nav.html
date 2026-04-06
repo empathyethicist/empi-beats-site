@@ -1,6 +1,9 @@
 <nav class="nav">
   <div class="nav-inner">
-    <a href="/" class="nav-brand">EMPI Beats</a>
+    <a href="/" class="nav-brand">
+      <img src="/img/empi-32.png" alt="" class="nav-icon pixel-render" width="24" height="24">
+      EMPI Beats
+    </a>
     <button class="nav-toggle" aria-label="Toggle menu" onclick="this.parentElement.classList.toggle('open')">&#9776;</button>
     <ul class="nav-links">
       {{ range .Site.Menus.main }}

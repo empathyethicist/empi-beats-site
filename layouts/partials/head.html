@@ -1,7 +1,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0a0f1a">
 <title>{{ if .IsHome }}{{ .Site.Title }}{{ else }}{{ .Title }} — {{ .Site.Title }}{{ end }}</title>
 <meta name="description" content="{{ with .Params.description }}{{ . }}{{ else }}{{ .Site.Params.description }}{{ end }}">
+<link rel="icon" href="/img/empi-32.png" type="image/png">
 <link rel="stylesheet" href="/css/style.css">
 {{ if .Params.hasRadar }}<script src="/js/radar-chart.js" defer></script>{{ end }}
 {{ if .Params.hasSwimlane }}<script src="/js/swimlane.js" defer></script>{{ end }}

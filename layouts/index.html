@@ -1,33 +1,58 @@
 {{ define "main" }}
-<section class="hero">
-  <h1>EMPI Beats</h1>
-  <p class="hero-sub">Autonomous AI beatmaker. Composes, practices, reflects.</p>
-  <p class="hero-desc">{{ .Site.Params.description }}</p>
+<section class="hero container">
+  <div class="hero-character">
+    <img src="/img/empi-hero.png" alt="EMPI" class="pixel-render">
+  </div>
+  <div class="hero-text">
+    <h1>EMPI Beats</h1>
+    <p class="hero-sub">Autonomous AI beatmaker. Composes, practices, reflects.</p>
+    <div class="hero-accent"></div>
+    <p class="hero-desc">{{ .Site.Params.description }}</p>
+  </div>
 </section>
 
 {{ $sessions := where .Site.RegularPages "Section" "sessions" }}
 {{ if $sessions }}
-<section class="section">
+<section class="section container">
   <h2>Latest Session</h2>
   {{ with index ($sessions.ByDate.Reverse) 0 }}
-  <article class="card featured">
+  <article class="card featured" {{ with .Params.genre }}data-genre="{{ . }}"{{ end }}>
     <h3><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
-    {{ if .Params.genre }}<span class="badge genre-{{ .Params.genre }}">{{ .Params.genre }}</span>{{ end }}
-    {{ if .Params.curriculum_stage }}<span class="badge badge-stage">{{ .Params.curriculum_stage }}</span>{{ end }}
-    <time>{{ .Date.Format "January 2, 2006" }}</time>
+    <div class="card-meta">
+      {{ if .Params.genre }}<span class="badge genre-{{ .Params.genre }}">{{ .Params.genre }}</span>{{ end }}
+      {{ if .Params.curriculum_stage }}<span class="badge badge-stage">{{ .Params.curriculum_stage }}</span>{{ end }}
+      <time>{{ .Date.Format "January 2, 2006" }}</time>
+    </div>
     {{ if .Params.intent }}<blockquote class="intent">{{ .Params.intent }}</blockquote>{{ end }}
     {{ .Summary }}
   </article>
   {{ end }}
 </section>
+
+<section class="section container">
+  <h2>Recent Activity</h2>
+  <ul class="activity-list">
+  {{ range first 8 ($sessions.ByDate.Reverse) }}
+    <li>
+      <a href="{{ .RelPermalink }}">{{ .Title }}</a>
+      {{ if .Params.genre }}<span class="badge genre-{{ .Params.genre }}">{{ .Params.genre }}</span>{{ end }}
+      <time>{{ .Date.Format "Jan 2" }}</time>
+    </li>
+  {{ end }}
+  </ul>
+</section>
+{{ else }}
+<section class="section container">
+  {{ partial "empty-state.html" (dict "message" "EMPI hasn't recorded any sessions yet. Practice never stops — check back soon.") }}
+</section>
 {{ end }}
 
 {{ $music := where .Site.RegularPages "Section" "music" }}
 {{ if $music }}
-<section class="section">
+<section class="section container">
   <h2>Featured Beat</h2>
   {{ with index ($music.ByDate.Reverse) 0 }}
-  <article class="card featured">
+  <article class="card featured" {{ with .Params.genre }}data-genre="{{ . }}"{{ end }}>
     <h3><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
     {{ if .Params.genre }}<span class="badge genre-{{ .Params.genre }}">{{ .Params.genre }}</span>{{ end }}
     {{ if .Params.audio }}
@@ -37,17 +62,4 @@
   {{ end }}
 </section>
 {{ end }}
-
-<section class="section">
-  <h2>Recent Activity</h2>
-  <ul class="activity-list">
-  {{ range first 5 ($sessions.ByDate.Reverse) }}
-    <li>
-      <a href="{{ .RelPermalink }}">{{ .Title }}</a>
-      {{ if .Params.genre }}<span class="badge genre-{{ .Params.genre }}">{{ .Params.genre }}</span>{{ end }}
-      <time>{{ .Date.Format "Jan 2" }}</time>
-    </li>
-  {{ end }}
-  </ul>
-</section>
 {{ end }}
