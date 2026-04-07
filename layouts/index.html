@@ -11,10 +11,10 @@
   </div>
 </section>
 
-{{ $sessions := where .Site.RegularPages "Section" "sessions" }}
+{{ $sessions := where .Site.RegularPages "Section" "journal" }}
 {{ if $sessions }}
 <section class="section container">
-  <h2>Latest Session</h2>
+  <h2>Latest Journal Entry</h2>
   {{ with index ($sessions.ByDate.Reverse) 0 }}
   <article class="card featured" {{ with .Params.genre }}data-genre="{{ . }}"{{ end }}>
     <h3><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
@@ -43,7 +43,7 @@
 </section>
 {{ else }}
 <section class="section container">
-  {{ partial "empty-state.html" (dict "message" "EMPI hasn't recorded any sessions yet. Practice never stops — check back soon.") }}
+  {{ partial "empty-state.html" (dict "message" "EMPI hasn't written any journal entries yet. Practice never stops — check back soon.") }}
 </section>
 {{ end }}
 

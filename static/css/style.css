@@ -822,6 +822,41 @@ body::after {
   white-space: pre-wrap;
 }
 
+/* Reflection class badges */
+.badge-cross-reflection {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.badge-session-reflection {
+  background: var(--cool-ambient);
+  color: var(--bg);
+}
+
+.card.reflection-session {
+  border-left-color: var(--cool-ambient);
+}
+
+.card.reflection-cross-session {
+  border-left-color: var(--accent);
+}
+
+.score-explainer {
+  background: var(--surface-elevated);
+  border-left: 3px solid var(--muted);
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  margin: 1rem 0 1.5rem;
+}
+
+/* Discovery cards */
+.discovery-card .seed {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
 /* Creative session badge + card accent */
 .badge-creative {
   background: var(--cool-ambient);
@@ -830,6 +865,44 @@ body::after {
 
 .card.session-creative {
   border-left-color: var(--cool-ambient);
+}
+
+/* MAP-State canon tag table (on list page) */
+.map-tag-table {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1.5rem 0 2.5rem;
+}
+
+.map-tag-row {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border);
+  border-radius: 4px;
+  padding: 0.85rem 1.1rem;
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+.map-tag-row .map-tag {
+  justify-self: start;
+  align-self: start;
+}
+
+.map-tag-row p {
+  margin: 0;
+  color: var(--text);
+  line-height: 1.55;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 640px) {
+  .map-tag-row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
 }
 
 /* MAP-State notes feed */

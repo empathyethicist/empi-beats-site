@@ -85,17 +85,17 @@ function copyFile(src, dest) {
 }
 
 // ---------------------------------------------------------------------------
-// 1. Sessions — scan sessions/*/meta.json directly
+// 1. Journal — Practice (P*) + Creative Studio (UUID) sessions
 // ---------------------------------------------------------------------------
 
-function generateSessions() {
+function generateJournal() {
   const sessionsDir = path.join(evidencePath, 'sessions');
   if (!fs.existsSync(sessionsDir)) {
     console.log('  No sessions directory at', sessionsDir);
     return 0;
   }
 
-  const outDir = path.join(contentDir, 'sessions');
+  const outDir = path.join(contentDir, 'journal');
   ensureDir(outDir);
 
   let count = 0;
@@ -108,16 +108,15 @@ function generateSessions() {
     const meta = readJSON(path.join(sessionPath, 'meta.json'));
     if (!meta) continue;
 
+    // Route non-Journal content to their own generators
+    if (dir.startsWith('R')) continue;  // Reflections
+    if (dir.startsWith('D')) continue;  // Discovery
+
     // Detect session type by schema
     const hasInteractions = fs.existsSync(path.join(sessionPath, 'interactions.jsonl'));
     const hasSummary = fs.existsSync(path.join(sessionPath, 'summary.md'));
-    const hasReflectionMd = fs.existsSync(path.join(sessionPath, 'reflection.md'));
     const hasReflectionJson = fs.existsSync(path.join(sessionPath, 'reflection.json'));
-    const isWrittenReflection = dir.startsWith('R') && hasReflectionMd;
     const isCreativeStudio = hasSummary && hasReflectionJson && !hasInteractions;
-
-    // Route written reflections to generateReflections() — skip here
-    if (isWrittenReflection) continue;
 
     // ── Creative Studio session (UUID-named) ──────────────────────────────
     if (isCreativeStudio) {
@@ -226,7 +225,57 @@ function generateSessions() {
 }
 
 // ---------------------------------------------------------------------------
-// 2. Reflections — written reflections from sessions/R*/reflection.md
+// 1b. Discovery — listening sessions (D*)
+// ---------------------------------------------------------------------------
+
+function generateDiscovery() {
+  const sessionsDir = path.join(evidencePath, 'sessions');
+  if (!fs.existsSync(sessionsDir)) return 0;
+
+  const outDir = path.join(contentDir, 'discovery');
+  ensureDir(outDir);
+
+  let count = 0;
+  const dirs = fs.readdirSync(sessionsDir).filter(d => {
+    if (!d.startsWith('D')) return false;
+    try { return fs.statSync(path.join(sessionsDir, d)).isDirectory(); } catch { return false; }
+  });
+
+  for (const dir of dirs) {
+    const sessionPath = path.join(sessionsDir, dir);
+    const meta = readJSON(path.join(sessionPath, 'meta.json'));
+    if (!meta) continue;
+
+    const interactions = readJSONL(path.join(sessionPath, 'interactions.jsonl'));
+
+    // Extract listening insights from interactions
+    const notes = interactions
+      .map(i => i.prose || i.full_response || i.content || '')
+      .filter(Boolean)
+      .join('\n\n');
+
+    const id = meta.session_id || dir;
+    const title = meta.title || meta.seed_topic || `Discovery ${id}`;
+
+    const fm = {
+      title: title.startsWith('Discovery') ? title : `Discovery: ${title}`,
+      date: meta.started || meta.timestamp || new Date().toISOString(),
+      session_id: id,
+      hops: meta.total_hops || meta.hops || '',
+      tracks_listened: meta.tracks_listened || '',
+      seed_topic: meta.seed_topic || '',
+      termination: meta.termination_reason || meta.termination || '',
+    };
+
+    writeFile(path.join(outDir, slugify(id) + '.md'), yamlFrontmatter(fm) + '\n\n' + (notes || '') + '\n');
+    count++;
+  }
+
+  return count;
+}
+
+// ---------------------------------------------------------------------------
+// 2. Reflections — written reflections (R*) + creative session reflections
 // ---------------------------------------------------------------------------
 
 function generateReflections() {
@@ -257,12 +306,59 @@ function generateReflections() {
       quality_score: meta.quality_score || '',
       quality_level: meta.quality_level || '',
       session_id: dir,
+      reflection_class: 'cross-session',
     };
 
     if (meta.has_interests_update) fm.has_interests_update = meta.has_interests_update;
     if (meta.has_practice_request) fm.has_practice_request = meta.has_practice_request;
 
     writeFile(path.join(outDir, slugify(dir) + '.md'), yamlFrontmatter(fm) + '\n\n' + body + '\n');
+    count++;
+  }
+
+  // ── Creative studio session reflections (per-session, from reflection.json) ──
+  const uuidDirs = fs.readdirSync(sessionsDir).filter(d => {
+    if (d.startsWith('P') || d.startsWith('R') || d.startsWith('D')) return false;
+    if (d.startsWith('L') || d.startsWith('C')) return false;
+    try { return fs.statSync(path.join(sessionsDir, d)).isDirectory(); } catch { return false; }
+  });
+
+  for (const dir of uuidDirs) {
+    const sessionPath = path.join(sessionsDir, dir);
+    const reflPath = path.join(sessionPath, 'reflection.json');
+    if (!fs.existsSync(reflPath)) continue;
+
+    const refl = readJSON(reflPath);
+    if (!refl) continue;
+
+    // Strip XML tags from map_states_frame to get clean prose
+    const rawFrame = (refl.map_states_frame || '').trim();
+    if (!rawFrame || rawFrame.length < 100) continue;
+
+    const cleanText = rawFrame
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    const meta = readJSON(path.join(sessionPath, 'meta.json')) || {};
+    const rationale = refl.five_things_rationale || '';
+
+    const dateStr = refl.generated_at || meta.start_time || meta.started || '';
+    const shortDate = dateStr
+      ? new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      : 'Session Reflection';
+
+    const fm = {
+      title: `Session Reflection — ${shortDate}`,
+      date: dateStr || new Date().toISOString(),
+      session_id: dir,
+      reflection_class: 'session',
+      cycles: refl.cycles_reflected || meta.cycles_completed || 0,
+    };
+
+    const body = cleanText + (rationale ? '\n\n**Five Things rationale:** ' + rationale : '');
+
+    writeFile(path.join(outDir, slugify('session-' + dir) + '.md'), yamlFrontmatter(fm) + '\n\n' + body + '\n');
     count++;
   }
 
@@ -611,11 +707,12 @@ console.log('  Evidence:', evidencePath);
 console.log('  Output:', contentDir);
 console.log('');
 
-const sessionCount = generateSessions();
+const journalCount = generateJournal();
+const discoveryCount = generateDiscovery();
 const reflectionCount = generateReflections();
 const sketchCount = generateSketches();
 const mapStateCount = generateMapStates();
 const musicCount = generateMusic();
 
 console.log('');
-console.log(`Summary: ${sessionCount} sessions, ${reflectionCount} reflections, ${sketchCount} sketches, ${mapStateCount} MAP-states, ${musicCount} music`);
+console.log(`Summary: ${journalCount} journal, ${discoveryCount} discovery, ${reflectionCount} reflections, ${sketchCount} sketches, ${mapStateCount} MAP-states, ${musicCount} music`);

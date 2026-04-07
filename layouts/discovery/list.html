@@ -1,0 +1,24 @@
+{{ define "main" }}
+<section class="section container">
+  <h1>{{ .Title }}</h1>
+  {{ .Content }}
+  {{ if .Paginator.Pages }}
+  {{ range .Paginator.Pages }}
+  <article class="card discovery-card">
+    <div class="card-header">
+      <h2><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
+      <div class="card-meta">
+        <time>{{ .Date.Format "January 2, 2006" }}</time>
+        {{ if .Params.hops }}<span class="muted">&middot; {{ .Params.hops }} hops</span>{{ end }}
+        {{ if .Params.tracks_listened }}<span class="muted">&middot; {{ .Params.tracks_listened }} tracks</span>{{ end }}
+      </div>
+    </div>
+    {{ if .Params.seed_topic }}<p class="seed">seed: <em>{{ .Params.seed_topic }}</em></p>{{ end }}
+  </article>
+  {{ end }}
+  {{ template "_internal/pagination.html" . }}
+  {{ else }}
+  {{ partial "empty-state.html" (dict "message" "No discovery sessions yet.") }}
+  {{ end }}
+</section>
+{{ end }}

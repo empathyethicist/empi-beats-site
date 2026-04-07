@@ -1,0 +1,29 @@
+{{ define "main" }}
+<article class="single discovery-detail container">
+  <header>
+    <h1>{{ .Title }}</h1>
+    <div class="session-meta">
+      <time>{{ .Date.Format "January 2, 2006" }}</time>
+      {{ if .Params.hops }}<span class="muted">&middot; {{ .Params.hops }} hops</span>{{ end }}
+      {{ if .Params.tracks_listened }}<span class="muted">&middot; {{ .Params.tracks_listened }} tracks</span>{{ end }}
+      {{ if .Params.termination }}<span class="muted">&middot; ended: {{ .Params.termination }}</span>{{ end }}
+    </div>
+  </header>
+
+  {{ if .Params.seed_topic }}
+  <section class="intent-block">
+    <h2>Seed</h2>
+    <blockquote class="intent">{{ .Params.seed_topic }}</blockquote>
+  </section>
+  {{ end }}
+
+  {{ if .Content }}
+  <section class="journal-section">
+    <h2>Listening Notes</h2>
+    <div class="content journal-body">
+      {{ .Content }}
+    </div>
+  </section>
+  {{ end }}
+</article>
+{{ end }}

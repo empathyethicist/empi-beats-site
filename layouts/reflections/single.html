@@ -3,8 +3,16 @@
   <header>
     <h1>{{ .Title }}</h1>
     <div class="reflection-meta">
+      {{ if eq .Params.reflection_class "session" }}
+      <span class="badge badge-session-reflection">Session Reflection</span>
+      {{ else }}
+      <span class="badge badge-cross-reflection">Cross-Session</span>
+      {{ end }}
       <time>{{ .Date.Format "January 2, 2006" }}</time>
-      {{ if .Params.quality_score }}<span class="badge badge-score">Quality: {{ .Params.quality_score }}</span>{{ end }}
+      {{ if .Params.quality_score }}
+      <span class="badge badge-score" title="Heuristic score 0–1: length + specificity + self-awareness + actionability">Depth: {{ .Params.quality_score }}</span>
+      {{ end }}
+      {{ if .Params.cycles }}<span class="muted">&middot; {{ .Params.cycles }} cycles</span>{{ end }}
     </div>
   </header>
 
@@ -12,6 +20,10 @@
   <section class="reflection-snapshot">
     <img src="{{ .Params.snapshot }}" alt="Reflection drawing" class="pixel-render">
   </section>
+  {{ end }}
+
+  {{ if .Params.quality_score }}
+  <p class="score-explainer muted">The <em>depth score</em> is a heuristic from the reflection text — length, technical specificity, first-person self-awareness, actionable directions, and novelty flags. It's a signal, not a judgment.</p>
   {{ end }}
 
   <div class="content">
