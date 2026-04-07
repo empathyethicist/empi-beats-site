@@ -628,72 +628,115 @@ function generateMapStates() {
 }
 
 // ---------------------------------------------------------------------------
-// 4. Music from best_render_archive.json + highlights
+// 4. Music — one canonical WAV per practice session, converted to MP3
 // ---------------------------------------------------------------------------
 
+// Pick the most refined WAV for a session, in priority order
+function pickCanonicalWav(sessionDir) {
+  const normalizedDir = path.join(sessionDir, 'normalized');
+  // 1st: normalized + trim variant (silence-trimmed, final processed)
+  if (fs.existsSync(normalizedDir)) {
+    const normalized = fs.readdirSync(normalizedDir);
+    // Prefer timestamped human-readable name with _trim suffix
+    const trimDated = normalized.find(f => /^\d{4}-\d{2}-\d{2}_practice_\d+_trim\.wav$/.test(f));
+    if (trimDated) return path.join(normalizedDir, trimDated);
+    // Fallback: practice_trim.wav (generic)
+    if (normalized.includes('practice_trim.wav')) return path.join(normalizedDir, 'practice_trim.wav');
+    // Fallback: any _trim.wav
+    const anyTrim = normalized.find(f => f.endsWith('_trim.wav'));
+    if (anyTrim) return path.join(normalizedDir, anyTrim);
+  }
+  // 2nd: timestamped raw at session root
+  const root = fs.readdirSync(sessionDir);
+  const rawDated = root.find(f => /^\d{4}-\d{2}-\d{2}_practice_\d+\.wav$/.test(f));
+  if (rawDated) return path.join(sessionDir, rawDated);
+  // 3rd: practice.wav fallback
+  if (root.includes('practice.wav')) return path.join(sessionDir, 'practice.wav');
+  return null;
+}
+
+// Convert WAV → MP3 with ffmpeg (idempotent — skip if MP3 exists)
+function convertWavToMp3(wavPath, mp3Path) {
+  if (fs.existsSync(mp3Path)) return true;
+  if (dryRun) return true;
+  try {
+    const { execFileSync } = require('child_process');
+    execFileSync('ffmpeg', [
+      '-y', '-loglevel', 'error',
+      '-i', wavPath,
+      '-codec:a', 'libmp3lame',
+      '-b:a', '128k',
+      mp3Path
+    ], { timeout: 30000 });
+    return true;
+  } catch (e) {
+    console.warn('  ffmpeg failed for', path.basename(wavPath), '-', e.message);
+    return false;
+  }
+}
+
 function generateMusic() {
-  const archivePath = path.join(evidencePath, 'best_render_archive.json');
-  const highlightsDir = path.join(evidencePath, 'highlights');
-  const archive = readJSON(archivePath) || [];
-
-  // Also scan highlights dir for individual track JSON
-  let tracks = Array.isArray(archive) ? [...archive] : [];
-  if (fs.existsSync(highlightsDir)) {
-    const hFiles = fs.readdirSync(highlightsDir).filter(f => f.endsWith('.json'));
-    for (const f of hFiles) {
-      const t = readJSON(path.join(highlightsDir, f));
-      if (t) tracks.push(t);
-    }
-  }
-
-  if (!tracks.length) {
-    return 0;
-  }
+  const sessionsDir = path.join(evidencePath, 'sessions');
+  if (!fs.existsSync(sessionsDir)) return 0;
 
   const outDir = path.join(contentDir, 'music');
+  const audioDir = path.join(__dirname, '..', 'static', 'audio');
   ensureDir(outDir);
+  ensureDir(audioDir);
 
-  // Deduplicate by session_id
-  const seen = new Set();
   let count = 0;
+  let converted = 0;
+  let skipped = 0;
 
-  for (const track of tracks) {
-    // Quality gate: only publish best renders (spec: quality >= 0.65)
-    if (typeof track.aggregate_quality === 'number' && track.aggregate_quality < 0.65) continue;
-    const id = track.session_id || track.id || track.descriptor || `track-${count}`;
-    if (seen.has(id)) continue;
-    seen.add(id);
+  const dirs = fs.readdirSync(sessionsDir).filter(d => {
+    if (!d.startsWith('P')) return false;
+    try { return fs.statSync(path.join(sessionsDir, d)).isDirectory(); } catch { return false; }
+  });
 
-    let audio = '';
-    if (track.audio_file) audio = '/audio/' + path.basename(track.audio_file);
+  for (const sessionId of dirs) {
+    const sessionPath = path.join(sessionsDir, sessionId);
+    const meta = readJSON(path.join(sessionPath, 'meta.json'));
+    if (!meta) continue;
 
-    let fingerprint = '';
-    if (track.fingerprint && typeof track.fingerprint === 'object') {
-      const fp = track.fingerprint;
-      fingerprint = [
-        fp.pocket, fp.frequency_clarity || fp.freq_clarity,
-        fp.density_balance || fp.density_bal,
-        fp.timing_intention || fp.timing_int,
-        fp.energy_arc, fp.timbral_coherence || fp.timbral_coh
-      ].join(',');
-    }
+    // Only include sessions where the render actually succeeded
+    if (meta.render_ok !== true) { skipped++; continue; }
 
+    const wavPath = pickCanonicalWav(sessionPath);
+    if (!wavPath) { skipped++; continue; }
+
+    // Build MP3 output path: {sessionId}.mp3 in static/audio/
+    const mp3Name = sessionId.toLowerCase() + '.mp3';
+    const mp3Path = path.join(audioDir, mp3Name);
+
+    if (!convertWavToMp3(wavPath, mp3Path)) continue;
+    converted++;
+
+    const decision = meta.decision || {};
     const fm = {
-      title: track.title || track.descriptor || `Track ${id}`,
-      date: track.timestamp || track.date || new Date().toISOString(),
-      genre: track.genre || '',
-      quality_score: track.quality_score || track.score || '',
+      title: meta.title || `Session ${sessionId}`,
+      date: meta.started || meta.completed || new Date().toISOString(),
+      session_id: sessionId,
+      domain: meta.domain || '',
+      duration: decision.duration || meta.duration || '',
+      audio: '/audio/' + mp3Name,
     };
 
-    if (audio) fm.audio = audio;
-    if (fingerprint) fm.fingerprint = fingerprint;
+    // Optional fingerprint
+    const fp = meta.fingerprint_scores || meta.fingerprint;
+    if (fp && typeof fp === 'object') {
+      const fpStr = [
+        fp.pocket, fp.frequency_clarity, fp.density_balance,
+        fp.timing_intention, fp.energy_arc, fp.timbral_coherence
+      ].filter(v => v !== undefined).join(',');
+      if (fpStr) { fm.fingerprint = fpStr; fm.hasRadar = true; }
+    }
 
-    const body = track.description || track.notes || '';
-    const content = yamlFrontmatter(fm) + '\n\n' + body + '\n';
-    writeFile(path.join(outDir, slugify(id) + '.md'), content);
+    const body = decision.intent ? '> ' + decision.intent + '\n' : '';
+    writeFile(path.join(outDir, slugify(sessionId) + '.md'), yamlFrontmatter(fm) + '\n\n' + body);
     count++;
   }
 
+  if (converted > 0) console.log(`  ${converted} MP3s ready in static/audio/`);
   return count;
 }
 
