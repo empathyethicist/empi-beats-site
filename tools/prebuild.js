@@ -631,28 +631,66 @@ function generateMapStates() {
 // 4. Music — one canonical WAV per practice session, converted to MP3
 // ---------------------------------------------------------------------------
 
-// Pick the most refined WAV for a session, in priority order
-function pickCanonicalWav(sessionDir) {
-  const normalizedDir = path.join(sessionDir, 'normalized');
-  // 1st: normalized + trim variant (silence-trimmed, final processed)
-  if (fs.existsSync(normalizedDir)) {
-    const normalized = fs.readdirSync(normalizedDir);
-    // Prefer timestamped human-readable name with _trim suffix
-    const trimDated = normalized.find(f => /^\d{4}-\d{2}-\d{2}_practice_\d+_trim\.wav$/.test(f));
-    if (trimDated) return path.join(normalizedDir, trimDated);
-    // Fallback: practice_trim.wav (generic)
-    if (normalized.includes('practice_trim.wav')) return path.join(normalizedDir, 'practice_trim.wav');
-    // Fallback: any _trim.wav
-    const anyTrim = normalized.find(f => f.endsWith('_trim.wav'));
-    if (anyTrim) return path.join(normalizedDir, anyTrim);
+// Get mean volume in dB for a WAV (returns -Infinity on failure)
+function getWavMeanDb(wavPath) {
+  if (dryRun) return 0; // skip in dry-run
+  try {
+    const { spawnSync } = require('child_process');
+    const result = spawnSync('ffmpeg', [
+      '-i', wavPath,
+      '-af', 'volumedetect',
+      '-f', 'null',
+      '-'
+    ], { timeout: 30000, encoding: 'utf8' });
+    const output = (result.stderr || '') + (result.stdout || '');
+    const meanMatch = output.match(/mean_volume:\s*(-?[\d.]+)\s*dB/);
+    return meanMatch ? parseFloat(meanMatch[1]) : -Infinity;
+  } catch (_) {
+    return -Infinity;
   }
-  // 2nd: timestamped raw at session root
-  const root = fs.readdirSync(sessionDir);
-  const rawDated = root.find(f => /^\d{4}-\d{2}-\d{2}_practice_\d+\.wav$/.test(f));
-  if (rawDated) return path.join(sessionDir, rawDated);
-  // 3rd: practice.wav fallback
-  if (root.includes('practice.wav')) return path.join(sessionDir, 'practice.wav');
-  return null;
+}
+
+// Pick the canonical WAV for a session — the loudest viable candidate.
+// The "_trim" normalization variant is broken on some sessions (trims away the audio
+// and leaves only silence), so we test all candidates and pick the loudest above threshold.
+function pickCanonicalWav(sessionDir) {
+  const candidates = [];
+
+  // Collect raw WAVs at session root
+  let root = [];
+  try { root = fs.readdirSync(sessionDir); } catch (_) {}
+  for (const f of root) {
+    if (f.endsWith('.wav')) candidates.push(path.join(sessionDir, f));
+  }
+
+  // Collect normalized variants
+  const normalizedDir = path.join(sessionDir, 'normalized');
+  if (fs.existsSync(normalizedDir)) {
+    let normalized = [];
+    try { normalized = fs.readdirSync(normalizedDir); } catch (_) {}
+    for (const f of normalized) {
+      if (f.endsWith('.wav')) candidates.push(path.join(normalizedDir, f));
+    }
+  }
+
+  if (candidates.length === 0) return null;
+
+  // In dry-run, just return the first candidate (skip volume analysis)
+  if (dryRun) return candidates[0];
+
+  // Test all candidates, return the loudest one above the silence threshold
+  let bestPath = null;
+  let bestDb = -Infinity;
+  for (const c of candidates) {
+    const db = getWavMeanDb(c);
+    if (db > bestDb) {
+      bestDb = db;
+      bestPath = c;
+    }
+  }
+  // Only return if at least one candidate is above silence threshold
+  if (bestDb < -70) return null;
+  return bestPath;
 }
 
 // Detect silence/dead-air WAV via ffmpeg volumedetect.
@@ -728,13 +766,12 @@ function generateMusic() {
     // Only include sessions where the render actually succeeded
     if (meta.render_ok !== true) { skipped++; continue; }
 
+    // pickCanonicalWav now tests all candidates and returns the loudest viable one,
+    // or null if all candidates are silent. So a null result means silent render.
     const wavPath = pickCanonicalWav(sessionPath);
-    if (!wavPath) { skipped++; continue; }
-
-    // Audio gate: skip silent renders (failed audio output despite render_ok)
-    if (!isAudibleWav(wavPath)) {
+    if (!wavPath) {
       silent++;
-      // Clean up any existing MP3 from a previous run before silence detection
+      // Clean up any stale MP3 from a previous run that picked a silent file
       const staleName = sessionId.toLowerCase() + '.mp3';
       const stalePath = path.join(audioDir, staleName);
       if (fs.existsSync(stalePath) && !dryRun) {
