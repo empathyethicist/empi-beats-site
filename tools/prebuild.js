@@ -404,71 +404,126 @@ function dedupeFrameNotes(frames) {
   return result;
 }
 
-function generateMapStates() {
-  const framesDir = path.join(evidencePath, 'maph_frames');
-  if (!fs.existsSync(framesDir)) {
-    console.log('  No maph_frames directory at', framesDir);
-    return 0;
+// Parse XML-tagged frame string into list of {state, note} objects.
+// Input: "<orientation>toward-tension</orientation>\n<preference>resolution</preference>"
+function parseXmlFrameString(str) {
+  if (typeof str !== 'string') return [];
+  const results = [];
+  const matches = str.matchAll(/<([a-z_]+)>([\s\S]*?)<\/\1>/g);
+  for (const m of matches) {
+    results.push({ state: m[1], note: m[2].trim() });
   }
+  return results;
+}
 
+// Render notes list as HTML divs for MAP-states page body
+function renderNotesAsHtml(notes) {
+  return notes.map(n => {
+    const time = n.ts ? new Date(n.ts).toISOString().split('T')[1].slice(0, 8) : '';
+    const repeat = n.repeat ? ` _(×${n.repeat})_` : '';
+    const timeSpan = time ? `<span class="map-time">${time}</span> ` : '';
+    return `<div class="map-note map-state-${n.state}">\n${timeSpan}<span class="map-tag">${n.state}</span>${repeat}\n\n${n.note || '—'}\n</div>`;
+  }).join('\n\n');
+}
+
+function generateMapStates() {
   const outDir = path.join(contentDir, 'map-states');
   ensureDir(outDir);
 
   let count = 0;
 
-  // Walk agent directories (empi-primary, producer-primary, bouncer-front-door, etc.)
-  const agentDirs = fs.readdirSync(framesDir).filter(d => {
-    try { return fs.statSync(path.join(framesDir, d)).isDirectory(); } catch { return false; }
-  });
+  // ── Source 1: MAPH harness frames from maph_frames/empi-primary/<uuid>/ ──
+  const framesDir = path.join(evidencePath, 'maph_frames');
+  if (fs.existsSync(framesDir)) {
+    const primaryPath = path.join(framesDir, 'empi-primary');
+    if (fs.existsSync(primaryPath)) {
+      const uuidDirs = fs.readdirSync(primaryPath).filter(d => {
+        try { return fs.statSync(path.join(primaryPath, d)).isDirectory(); } catch { return false; }
+      });
 
-  for (const agentDir of agentDirs) {
-    // Only surface empi-primary frames on the public site — others are internal
-    if (agentDir !== 'empi-primary') continue;
+      for (const uuidDir of uuidDirs) {
+        const framesPath = path.join(primaryPath, uuidDir, 'frames.jsonl');
+        if (!fs.existsSync(framesPath)) continue;
 
-    const agentPath = path.join(framesDir, agentDir);
+        const rawFrames = readJSONL(framesPath);
+        if (!rawFrames.length) continue;
 
-    // Walk UUID subdirs (primary structure)
-    const uuidDirs = fs.readdirSync(agentPath).filter(d => {
-      try { return fs.statSync(path.join(agentPath, d)).isDirectory(); } catch { return false; }
+        const notes = dedupeFrameNotes(rawFrames);
+        if (!notes.length) continue;
+
+        const uniqueStates = new Set(notes.map(n => n.state));
+        if (notes.length < 2 && uniqueStates.size === 1) continue;
+
+        const firstTs = (rawFrames[0].frame && rawFrames[0].frame.timestamp) || rawFrames[0].timestamp || '';
+        const dateLabel = firstTs ? firstTs.split('T')[0] : uuidDir.slice(0, 8);
+
+        const fm = {
+          title: `MAP-States — Cycle — ${dateLabel}`,
+          date: firstTs || new Date().toISOString(),
+          source: 'harness',
+          session_uuid: uuidDir,
+          frame_count: rawFrames.length,
+          unique_notes: notes.length,
+          states: Array.from(uniqueStates),
+        };
+
+        const slug = slugify(`cycle-${dateLabel}-${uuidDir.slice(0, 8)}`);
+        writeFile(path.join(outDir, slug + '.md'), yamlFrontmatter(fm) + '\n\n' + renderNotesAsHtml(notes) + '\n');
+        count++;
+      }
+    }
+  }
+
+  // ── Source 2: Rich extracted_frames from practice sessions ──
+  const sessionsDir = path.join(evidencePath, 'sessions');
+  if (fs.existsSync(sessionsDir)) {
+    const pDirs = fs.readdirSync(sessionsDir).filter(d => {
+      if (!d.startsWith('P')) return false;
+      try { return fs.statSync(path.join(sessionsDir, d)).isDirectory(); } catch { return false; }
     });
 
-    for (const uuidDir of uuidDirs) {
-      const framesPath = path.join(agentPath, uuidDir, 'frames.jsonl');
-      if (!fs.existsSync(framesPath)) continue;
+    for (const sessionId of pDirs) {
+      const interactionsPath = path.join(sessionsDir, sessionId, 'interactions.jsonl');
+      if (!fs.existsSync(interactionsPath)) continue;
 
-      const rawFrames = readJSONL(framesPath);
-      if (!rawFrames.length) continue;
+      const meta = readJSON(path.join(sessionsDir, sessionId, 'meta.json')) || {};
+      const entries = readJSONL(interactionsPath);
+      if (!entries.length) continue;
 
-      const notes = dedupeFrameNotes(rawFrames);
-      if (!notes.length) continue;
+      const allNotes = [];
+      for (const entry of entries) {
+        const ts = entry.timestamp || meta.started || '';
+        const frames = entry.extracted_frames || [];
+        for (const f of frames) {
+          if (typeof f === 'string') {
+            for (const parsed of parseXmlFrameString(f)) {
+              allNotes.push({ ts, state: parsed.state, note: parsed.note });
+            }
+          } else if (f && typeof f === 'object') {
+            allNotes.push({ ts, state: f.state || f.tag || 'frame', note: f.note || f.content || f.raw || '' });
+          }
+        }
+      }
 
-      // Skip sessions that only have dwell-nominal noise (no real progression)
-      const uniqueStates = new Set(notes.map(n => n.state));
-      if (notes.length < 2 && uniqueStates.size === 1) continue;
+      if (!allNotes.length) continue;
 
-      const firstTs = (rawFrames[0].frame && rawFrames[0].frame.timestamp) || rawFrames[0].timestamp || '';
-      const dateLabel = firstTs ? firstTs.split('T')[0] : uuidDir.slice(0, 8);
-
-      // Render notes as a markdown feed — state + content
-      const body = notes.map(n => {
-        const time = n.ts ? new Date(n.ts).toISOString().split('T')[1].slice(0, 8) : '';
-        const repeat = n.repeat ? ` _(×${n.repeat})_` : '';
-        return `<div class="map-note map-state-${n.state}">\n<span class="map-time">${time}</span> <span class="map-tag">${n.state}</span>${repeat}\n\n${n.note || '—'}\n</div>`;
-      }).join('\n\n');
+      const uniqueStates = new Set(allNotes.map(n => n.state));
+      const firstTs = allNotes[0].ts || meta.started || '';
+      const dateLabel = firstTs ? firstTs.split('T')[0] : sessionId;
+      const sessionTitle = meta.title || sessionId;
 
       const fm = {
-        title: `MAP-States — ${dateLabel}`,
+        title: `MAP-States — ${sessionTitle}`,
         date: firstTs || new Date().toISOString(),
-        agent: agentDir,
-        session_uuid: uuidDir,
-        frame_count: rawFrames.length,
-        unique_notes: notes.length,
+        source: 'session',
+        session_id: sessionId,
+        frame_count: allNotes.length,
+        unique_notes: allNotes.length,
         states: Array.from(uniqueStates),
       };
 
-      const slug = slugify(`${dateLabel}-${uuidDir.slice(0, 8)}`);
-      const content = yamlFrontmatter(fm) + '\n\n' + body + '\n';
-      writeFile(path.join(outDir, slug + '.md'), content);
+      const slug = slugify(`session-${dateLabel}-${sessionId.toLowerCase()}`);
+      writeFile(path.join(outDir, slug + '.md'), yamlFrontmatter(fm) + '\n\n' + renderNotesAsHtml(allNotes) + '\n');
       count++;
     }
   }
