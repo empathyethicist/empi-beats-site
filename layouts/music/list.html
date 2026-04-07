@@ -1,10 +1,11 @@
 {{ define "main" }}
-<section class="section">
+<section class="section container">
   <h1>{{ .Title }}</h1>
   {{ .Content }}
+  {{ if .Pages }}
   <div class="music-grid">
     {{ range .Pages.ByDate.Reverse }}
-    <article class="card music-card">
+    <article class="card music-card" {{ with .Params.genre }}data-genre="{{ . }}"{{ end }}>
       <h2><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
       <div class="card-meta">
         {{ if .Params.genre }}<span class="badge genre-{{ .Params.genre }}">{{ .Params.genre }}</span>{{ end }}
@@ -17,5 +18,12 @@
     </article>
     {{ end }}
   </div>
+  {{ else }}
+  <div class="empty-state">
+    <img src="/img/empi-excited.png" alt="EMPI" class="pixel-render">
+    <p><strong>No best renders yet.</strong></p>
+    <p>This section populates when a practice session scores above the Producer Judge threshold (aggregate quality ≥ 0.65). Until then, all work lives in the <a href="/sessions/">Sessions archive</a>.</p>
+  </div>
+  {{ end }}
 </section>
 {{ end }}

@@ -104,16 +104,73 @@ function generateSessions() {
   });
 
   for (const dir of dirs) {
-    const metaPath = path.join(sessionsDir, dir, 'meta.json');
-    const meta = readJSON(metaPath);
+    const sessionPath = path.join(sessionsDir, dir);
+    const meta = readJSON(path.join(sessionPath, 'meta.json'));
     if (!meta) continue;
 
+    // Detect session type by schema
+    const hasInteractions = fs.existsSync(path.join(sessionPath, 'interactions.jsonl'));
+    const hasSummary = fs.existsSync(path.join(sessionPath, 'summary.md'));
+    const hasReflectionMd = fs.existsSync(path.join(sessionPath, 'reflection.md'));
+    const hasReflectionJson = fs.existsSync(path.join(sessionPath, 'reflection.json'));
+    const isWrittenReflection = dir.startsWith('R') && hasReflectionMd;
+    const isCreativeStudio = hasSummary && hasReflectionJson && !hasInteractions;
+
+    // Route written reflections to generateReflections() — skip here
+    if (isWrittenReflection) continue;
+
+    // ── Creative Studio session (UUID-named) ──────────────────────────────
+    if (isCreativeStudio) {
+      const refl = readJSON(path.join(sessionPath, 'reflection.json')) || {};
+      const fiveThings = refl.five_things || {};
+      const scores = Object.values(fiveThings);
+      const allZero = scores.length > 0 && scores.every(v => v === 0 || v === null || v === undefined);
+      const hasOutput = (refl.cycles_reflected || 0) > 0 && !allZero;
+
+      // Filter out learning sessions (no output, all-zero scores)
+      if (!hasOutput) continue;
+
+      // Synthetic title from date + type
+      const startTime = meta.start_time || meta.started || refl.generated_at;
+      const dateStr = startTime
+        ? new Date(startTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+        : 'Unknown Date';
+      const sessionType = (meta.type || 'session').replace(/_/g, ' ');
+      const syntheticTitle = `Creative Session — ${dateStr}, ${sessionType}`;
+
+      // Body from reflection + summary
+      const mapStatesFrame = (refl.map_states_frame || '').replace(/<[^>]+>/g, '').trim();
+      const rationale = refl.five_things_rationale || '';
+      let summaryMd = '';
+      try { summaryMd = fs.readFileSync(path.join(sessionPath, 'summary.md'), 'utf8'); } catch (_) {}
+
+      const bodyParts = [];
+      if (mapStatesFrame) bodyParts.push('## Reflection\n\n' + mapStatesFrame);
+      if (rationale) bodyParts.push('## Five Things\n\n' + rationale);
+      if (summaryMd) bodyParts.push('## Summary\n\n' + summaryMd);
+      const body = bodyParts.join('\n\n');
+
+      const fm = {
+        title: syntheticTitle,
+        date: startTime || new Date().toISOString(),
+        type: meta.type || '',
+        cycles: meta.cycles_completed || 0,
+        duration_ms: meta.duration_ms || 0,
+        session_id: meta.session_id || dir,
+        session_class: 'creative',
+      };
+
+      writeFile(path.join(outDir, slugify(dir) + '.md'), yamlFrontmatter(fm) + '\n\n' + body + '\n');
+      count++;
+      continue;
+    }
+
+    // ── NRT Practice session (P*-named) ───────────────────────────────────
     const id = meta.session_id || dir;
     const decision = meta.decision || {};
 
     // Extract journal/prose from interactions
-    const interactionsPath = path.join(sessionsDir, dir, 'interactions.jsonl');
-    const interactions = readJSONL(interactionsPath);
+    const interactions = readJSONL(path.join(sessionPath, 'interactions.jsonl'));
     const journal = interactions
       .map(i => i.prose || i.full_response || '')
       .filter(Boolean)
@@ -121,16 +178,14 @@ function generateSessions() {
 
     // Build fingerprint string if available
     let fingerprint = '';
-    if (meta.fingerprint) {
-      const fp = meta.fingerprint;
-      if (typeof fp === 'object') {
-        fingerprint = [
-          fp.pocket, fp.frequency_clarity || fp.freq_clarity,
-          fp.density_balance || fp.density_bal,
-          fp.timing_intention || fp.timing_int,
-          fp.energy_arc, fp.timbral_coherence || fp.timbral_coh
-        ].join(',');
-      }
+    const fp = meta.fingerprint_scores || meta.fingerprint;
+    if (fp && typeof fp === 'object') {
+      fingerprint = [
+        fp.pocket, fp.frequency_clarity || fp.freq_clarity,
+        fp.density_balance || fp.density_bal,
+        fp.timing_intention || fp.timing_int,
+        fp.energy_arc, fp.timbral_coherence || fp.timbral_coh
+      ].filter(v => v !== undefined).join(',');
     }
 
     // Audio path
@@ -146,25 +201,24 @@ function generateSessions() {
       date: meta.started || meta.timestamp || new Date().toISOString(),
       type: meta.type || '',
       domain: meta.domain || '',
-      genre: meta.domain || meta.genre || '',
+      genre: meta.genre || meta.domain || '',
       duration: decision.duration || meta.duration || '',
       intent: decision.intent || '',
       rationale: decision.rationale || '',
-      render_status: meta.render_ok === true ? 'success' : meta.render_ok === false ? 'failed' : 'pending',
-      condition: meta.condition || '',
-      model: meta.model || '',
-      hasRadar: fingerprint ? true : false,
       session_id: id,
+      session_class: 'practice',
     };
 
-    if (fingerprint) fm.fingerprint = fingerprint;
+    // Only set render_status when known — let template skip the badge otherwise
+    if (meta.render_ok === true) fm.render_status = 'success';
+    else if (meta.render_ok === false) fm.render_status = 'failed';
+
+    if (fingerprint) { fm.fingerprint = fingerprint; fm.hasRadar = true; }
     if (audio) fm.audio = audio;
     if (meta.completed) fm.completed = meta.completed;
     if (meta.intent_stack) fm.intent_stack = meta.intent_stack;
 
-    const body = journal || '';
-    const content = yamlFrontmatter(fm) + '\n\n' + body + '\n';
-    writeFile(path.join(outDir, slugify(id) + '.md'), content);
+    writeFile(path.join(outDir, slugify(id) + '.md'), yamlFrontmatter(fm) + '\n\n' + (journal || '') + '\n');
     count++;
   }
 
@@ -172,59 +226,98 @@ function generateSessions() {
 }
 
 // ---------------------------------------------------------------------------
-// 2. Reflections — paired .json + .png files
+// 2. Reflections — written reflections from sessions/R*/reflection.md
 // ---------------------------------------------------------------------------
 
 function generateReflections() {
-  const refDir = path.join(evidencePath, 'reflections');
-  if (!fs.existsSync(refDir)) {
-    console.log('  No reflections directory at', refDir);
-    return 0;
-  }
+  const sessionsDir = path.join(evidencePath, 'sessions');
+  if (!fs.existsSync(sessionsDir)) return 0;
 
   const outDir = path.join(contentDir, 'reflections');
   ensureDir(outDir);
 
-  // Static directory for reflection snapshots
-  const imgDir = path.join(__dirname, '..', 'static', 'img', 'reflections');
+  let count = 0;
+  const dirs = fs.readdirSync(sessionsDir).filter(d => {
+    if (!d.startsWith('R')) return false;
+    try { return fs.statSync(path.join(sessionsDir, d)).isDirectory(); } catch { return false; }
+  });
+
+  for (const dir of dirs) {
+    const sessionPath = path.join(sessionsDir, dir);
+    const meta = readJSON(path.join(sessionPath, 'meta.json'));
+    const reflectionMdPath = path.join(sessionPath, 'reflection.md');
+    if (!meta || !fs.existsSync(reflectionMdPath)) continue;
+
+    let body = '';
+    try { body = fs.readFileSync(reflectionMdPath, 'utf8'); } catch (_) {}
+
+    const fm = {
+      title: meta.title || `Reflection ${dir}`,
+      date: meta.started || meta.created || meta.completed || new Date().toISOString(),
+      quality_score: meta.quality_score || '',
+      quality_level: meta.quality_level || '',
+      session_id: dir,
+    };
+
+    if (meta.has_interests_update) fm.has_interests_update = meta.has_interests_update;
+    if (meta.has_practice_request) fm.has_practice_request = meta.has_practice_request;
+
+    writeFile(path.join(outDir, slugify(dir) + '.md'), yamlFrontmatter(fm) + '\n\n' + body + '\n');
+    count++;
+  }
+
+  return count;
+}
+
+// ---------------------------------------------------------------------------
+// 2b. Sketches — p5.js visual drawings from legacy reflections dir
+// ---------------------------------------------------------------------------
+
+function generateSketches() {
+  const sketchesDir = path.join(evidencePath, 'reflections');
+  if (!fs.existsSync(sketchesDir)) return 0;
+
+  const outDir = path.join(contentDir, 'sketches');
+  ensureDir(outDir);
+
+  const imgDir = path.join(__dirname, '..', 'static', 'img', 'sketches');
   ensureDir(imgDir);
 
   let count = 0;
-  const files = fs.readdirSync(refDir).filter(f => f.endsWith('.json') || f.endsWith('.jsonl'));
+  const files = fs.readdirSync(sketchesDir).filter(f => f.endsWith('.json'));
 
   for (const file of files) {
-    const data = file.endsWith('.jsonl')
-      ? readJSONL(path.join(refDir, file))
-      : [readJSON(path.join(refDir, file))].filter(Boolean);
+    const data = readJSON(path.join(sketchesDir, file));
+    if (!data) continue;
 
-    for (const ref of data) {
-      const id = ref.session_id || ref.id || path.basename(file, path.extname(file));
-      const fm = {
-        title: ref.title || `Reflection — ${id}`,
-        date: ref.timestamp || ref.date || new Date().toISOString(),
-        quality_score: ref.quality_score || ref.score || '',
-      };
+    const id = data.session_id || path.basename(file, '.json');
 
-      if (ref.contradictions && ref.contradictions.length) {
-        fm.contradictions = ref.contradictions;
-      }
-      if (ref.practice_request) {
-        fm.practice_request = ref.practice_request;
-      }
+    // Strip legacy "Garden Reflection" prefix — it's not canon
+    const origTitle = (data.title || '').trim();
+    const cleanTitle = origTitle
+      .replace(/^Garden Reflection\s*/i, '')
+      .replace(/^Reflection\s+/i, '')
+      .trim() || id;
 
-      // Check for paired PNG snapshot
-      const pngName = path.basename(file, '.json') + '.png';
-      const pngPath = path.join(refDir, pngName);
-      if (fs.existsSync(pngPath)) {
-        copyFile(pngPath, path.join(imgDir, pngName));
-        fm.snapshot = '/img/reflections/' + pngName;
-      }
+    const fm = {
+      title: `Sketch ${cleanTitle}`,
+      date: data.created || data.timestamp || new Date().toISOString(),
+      session_id: id,
+    };
 
-      const body = ref.prose || ref.content || ref.text || '';
-      const content = yamlFrontmatter(fm) + '\n\n' + body + '\n';
-      writeFile(path.join(outDir, slugify(id) + '.md'), content);
-      count++;
+    if (data.intent_stack) fm.intent_stack = data.intent_stack;
+    if (data.reflection_data_summary) fm.data_summary = data.reflection_data_summary;
+
+    // Copy PNG to site static/img/sketches/
+    const pngName = path.basename(file, '.json') + '.png';
+    const pngPath = path.join(sketchesDir, pngName);
+    if (fs.existsSync(pngPath)) {
+      copyFile(pngPath, path.join(imgDir, pngName));
+      fm.image = '/img/sketches/' + pngName;
     }
+
+    writeFile(path.join(outDir, slugify(id) + '.md'), yamlFrontmatter(fm) + '\n');
+    count++;
   }
 
   return count;
@@ -406,8 +499,9 @@ console.log('');
 
 const sessionCount = generateSessions();
 const reflectionCount = generateReflections();
+const sketchCount = generateSketches();
 const mapStateCount = generateMapStates();
 const musicCount = generateMusic();
 
 console.log('');
-console.log(`Summary: ${sessionCount} sessions, ${reflectionCount} reflections, ${mapStateCount} MAP-states, ${musicCount} music`);
+console.log(`Summary: ${sessionCount} sessions, ${reflectionCount} reflections, ${sketchCount} sketches, ${mapStateCount} MAP-states, ${musicCount} music`);

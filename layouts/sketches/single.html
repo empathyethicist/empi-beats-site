@@ -1,0 +1,39 @@
+{{ define "main" }}
+<article class="single sketch-detail container">
+  <header>
+    <h1>{{ .Title }}</h1>
+    <time>{{ .Date.Format "January 2, 2006" }}</time>
+  </header>
+
+  {{ if .Params.image }}
+  <section class="sketch-image">
+    <img src="{{ .Params.image }}" alt="{{ .Title }}" class="pixel-render">
+  </section>
+  {{ end }}
+
+  {{ if .Params.intent_stack }}
+  <section class="sketch-intent">
+    <h2>Intent</h2>
+    <dl>
+      {{ with .Params.intent_stack.aesthetic }}<dt>Aesthetic</dt><dd>{{ . }}</dd>{{ end }}
+      {{ with .Params.intent_stack.operational }}<dt>Operational</dt><dd>{{ . }}</dd>{{ end }}
+      {{ with .Params.intent_stack.developmental_category }}<dt>Category</dt><dd>{{ . }}</dd>{{ end }}
+      {{ with .Params.intent_stack.self_coherence }}<dt>Self-coherence</dt><dd>{{ . }}</dd>{{ end }}
+    </dl>
+  </section>
+  {{ end }}
+
+  {{ if .Params.data_summary }}
+  <section class="sketch-data">
+    <h2>Session Data</h2>
+    <ul>
+      {{ with .Params.data_summary.rooms_active }}<li><strong>Rooms active:</strong> {{ . }}</li>{{ end }}
+      {{ with .Params.data_summary.contradictions }}<li><strong>Contradictions:</strong> {{ . }}</li>{{ end }}
+      {{ with .Params.data_summary.valence_points }}<li><strong>Valence points:</strong> {{ . }}</li>{{ end }}
+    </ul>
+  </section>
+  {{ end }}
+
+  <div class="content">{{ .Content }}</div>
+</article>
+{{ end }}

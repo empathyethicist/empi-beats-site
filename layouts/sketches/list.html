@@ -1,0 +1,26 @@
+{{ define "main" }}
+<section class="section container">
+  <h1>{{ .Title }}</h1>
+  {{ .Content }}
+  {{ if .Paginator.Pages }}
+  <div class="sketches-grid">
+    {{ range .Paginator.Pages }}
+    <article class="sketch-card">
+      <a href="{{ .RelPermalink }}">
+        {{ if .Params.image }}
+        <img src="{{ .Params.image }}" alt="{{ .Title }}" class="sketch-thumb pixel-render">
+        {{ else }}
+        <div class="sketch-thumb sketch-thumb-placeholder"></div>
+        {{ end }}
+        <h3>{{ .Title }}</h3>
+        <time>{{ .Date.Format "Jan 2, 2006" }}</time>
+      </a>
+    </article>
+    {{ end }}
+  </div>
+  {{ template "_internal/pagination.html" . }}
+  {{ else }}
+  {{ partial "empty-state.html" (dict "message" "No sketches yet. EMPI's visual reflections will appear here.") }}
+  {{ end }}
+</section>
+{{ end }}

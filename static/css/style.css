@@ -702,6 +702,115 @@ body::after {
   margin-top: 0.5rem;
 }
 
+/* Sketches grid */
+.sketches-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+.sketch-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.sketch-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 0 12px var(--glow-accent);
+}
+
+.sketch-card a {
+  color: var(--text);
+  text-decoration: none;
+  display: block;
+}
+
+.sketch-thumb {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  display: block;
+  background: var(--bg);
+}
+
+.sketch-thumb-placeholder {
+  background: linear-gradient(135deg, var(--surface-elevated), var(--bg));
+}
+
+.sketch-card h3 {
+  padding: 0.75rem 1rem 0.25rem;
+  font-size: 1rem;
+  color: var(--text);
+}
+
+.sketch-card time {
+  padding: 0 1rem 1rem;
+  display: block;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.sketch-image {
+  margin: 1.5rem 0;
+  text-align: center;
+}
+
+.sketch-image img {
+  max-width: 100%;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+}
+
+.sketch-intent {
+  margin: 2rem 0;
+}
+
+.sketch-intent dl {
+  background: var(--surface-elevated);
+  padding: 1rem 1.5rem;
+  border-radius: 6px;
+  border-left: 3px solid var(--cool-ambient);
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5rem 1.5rem;
+}
+
+.sketch-intent dt {
+  font-weight: 600;
+  color: var(--accent);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sketch-intent dd {
+  color: var(--text);
+}
+
+.sketch-data ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sketch-data li {
+  padding: 0.35rem 0;
+  color: var(--muted);
+}
+
+/* Creative session badge + card accent */
+.badge-creative {
+  background: var(--cool-ambient);
+  color: var(--bg);
+}
+
+.card.session-creative {
+  border-left-color: var(--cool-ambient);
+}
+
 /* Mobile responsive */
 @media (max-width: 640px) {
   .nav-toggle { display: block; }

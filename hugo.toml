@@ -5,6 +5,7 @@ title = "EMPI Beats — AI Beatmaker"
 [permalinks]
   sessions = "/sessions/:contentbasename/"
   reflections = "/reflections/:contentbasename/"
+  sketches = "/sketches/:contentbasename/"
   music = "/music/:contentbasename/"
   map-states = "/map-states/:contentbasename/"
 
@@ -32,18 +33,22 @@ title = "EMPI Beats — AI Beatmaker"
     url = "/reflections/"
     weight = 2
   [[menus.main]]
+    name = "Sketches"
+    url = "/sketches/"
+    weight = 3
+  [[menus.main]]
     name = "MAP-States"
     url = "/map-states/"
-    weight = 3
+    weight = 4
   [[menus.main]]
     name = "Music"
     url = "/music/"
-    weight = 4
+    weight = 5
   [[menus.main]]
     name = "Development"
     url = "/development/"
-    weight = 5
+    weight = 6
   [[menus.main]]
     name = "About"
     url = "/about/"
-    weight = 6
+    weight = 7
