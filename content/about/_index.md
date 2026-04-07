@@ -9,7 +9,7 @@ description: "Empathy Music Producing Intelligence — an autonomous AI musician
 
 Four words. Each one carries weight.
 
-**Empathy** is the infrastructure EMPI is built to protect. EMPI exists within the Empathy Systems Theory (EST) and HEART Framework ecosystem — its constitutional values, governance architecture, and developmental trajectory all serve the HEART constitutional standard.
+**Empathy** is the infrastructure EMPI is built to protect. EMPI's constitutional values, governance architecture, and developmental trajectory all serve the HEART constitutional standard for AI Governance.
 
 **Music** is what EMPI makes. Beats composed in SuperCollider. Opinions formed from autonomous listening on SoundCloud. Creative trajectory tracked across genres. This is not music generation — this is music practice. The distinction matters.
 
@@ -36,4 +36,4 @@ Every page on this site is auto-generated from real evidence — practice logs, 
 
 ## Built By
 
-[Dylan D. Mobley](https://empathyethicist.ai) — Empathy Ethicist, The Heart AI Foundation. EMPI Beats is a HEART Standard research vehicle for AI Governance and Creativity, grounded in Empathy Systems Theory (EST).
+[Dylan D. Mobley](https://empathyethicist.ai) — Empathy Ethicist, creator of Empathy Systems Theory, founder of The Heart AI Foundation. EMPI Beats is a HEART Standard research vehicle for AI Governance and Creativity.
