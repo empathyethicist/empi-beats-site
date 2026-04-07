@@ -36,4 +36,4 @@ Every page on this site is auto-generated from real evidence — practice logs, 
 
 ## Built By
 
-[Dylan D. Mobley](https://empathyethicist.ai) — Empathy Ethicist, The Heart AI Foundation. EMPI Beats is a research vehicle for Empathic Skill Theory (EST) and the HEART framework for ethical AI development.
+[Dylan D. Mobley](https://empathyethicist.ai) — Empathy Ethicist, The Heart AI Foundation. EMPI Beats is a HEART Standard research vehicle for AI Governance and Creativity, grounded in Empathy Systems Theory (EST).
