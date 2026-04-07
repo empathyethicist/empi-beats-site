@@ -655,6 +655,32 @@ function pickCanonicalWav(sessionDir) {
   return null;
 }
 
+// Detect silence/dead-air WAV via ffmpeg volumedetect.
+// ffmpeg writes volumedetect output to stderr; we use spawnSync to capture both streams.
+function isAudibleWav(wavPath) {
+  if (dryRun) return true;
+  try {
+    const { spawnSync } = require('child_process');
+    const result = spawnSync('ffmpeg', [
+      '-i', wavPath,
+      '-af', 'volumedetect',
+      '-f', 'null',
+      '-'
+    ], { timeout: 30000, encoding: 'utf8' });
+    const output = (result.stderr || '') + (result.stdout || '');
+    const meanMatch = output.match(/mean_volume:\s*(-?[\d.]+)\s*dB/);
+    const maxMatch = output.match(/max_volume:\s*(-?[\d.]+)\s*dB/);
+    if (!meanMatch) return false;
+    const mean = parseFloat(meanMatch[1]);
+    const max = maxMatch ? parseFloat(maxMatch[1]) : -Infinity;
+    // Silence threshold: mean below -70dB indicates dead air (real renders are -4 to -50dB)
+    if (mean < -70 || max < -40) return false;
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 // Convert WAV → MP3 with ffmpeg (idempotent — skip if MP3 exists)
 function convertWavToMp3(wavPath, mp3Path) {
   if (fs.existsSync(mp3Path)) return true;
@@ -687,6 +713,7 @@ function generateMusic() {
   let count = 0;
   let converted = 0;
   let skipped = 0;
+  let silent = 0;
 
   const dirs = fs.readdirSync(sessionsDir).filter(d => {
     if (!d.startsWith('P')) return false;
@@ -704,6 +731,18 @@ function generateMusic() {
     const wavPath = pickCanonicalWav(sessionPath);
     if (!wavPath) { skipped++; continue; }
 
+    // Audio gate: skip silent renders (failed audio output despite render_ok)
+    if (!isAudibleWav(wavPath)) {
+      silent++;
+      // Clean up any existing MP3 from a previous run before silence detection
+      const staleName = sessionId.toLowerCase() + '.mp3';
+      const stalePath = path.join(audioDir, staleName);
+      if (fs.existsSync(stalePath) && !dryRun) {
+        try { fs.unlinkSync(stalePath); } catch (_) {}
+      }
+      continue;
+    }
+
     // Build MP3 output path: {sessionId}.mp3 in static/audio/
     const mp3Name = sessionId.toLowerCase() + '.mp3';
     const mp3Path = path.join(audioDir, mp3Name);
@@ -712,8 +751,16 @@ function generateMusic() {
     converted++;
 
     const decision = meta.decision || {};
+    // Disambiguate duplicate titles by appending the date
+    const baseTitle = meta.title || `Session ${sessionId}`;
+    const dateForTitle = meta.started || meta.completed;
+    const dateLabel = dateForTitle
+      ? new Date(dateForTitle).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      : '';
+    const titleWithDate = dateLabel ? `${baseTitle} · ${dateLabel}` : baseTitle;
+
     const fm = {
-      title: meta.title || `Session ${sessionId}`,
+      title: titleWithDate,
       date: meta.started || meta.completed || new Date().toISOString(),
       session_id: sessionId,
       domain: meta.domain || '',
@@ -737,6 +784,7 @@ function generateMusic() {
   }
 
   if (converted > 0) console.log(`  ${converted} MP3s ready in static/audio/`);
+  if (silent > 0) console.log(`  ${silent} silent renders skipped`);
   return count;
 }
 
