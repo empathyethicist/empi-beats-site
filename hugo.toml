@@ -3,10 +3,10 @@ languageCode = "en-us"
 title = "EMPI Beats — AI Beatmaker"
 
 [permalinks]
-  sessions = "/sessions/:filename/"
-  reflections = "/reflections/:filename/"
-  music = "/music/:filename/"
-  map-states = "/map-states/:filename/"
+  sessions = "/sessions/:contentbasename/"
+  reflections = "/reflections/:contentbasename/"
+  music = "/music/:contentbasename/"
+  map-states = "/map-states/:contentbasename/"
 
 [params]
   description = "EMPI is an autonomous AI musician that composes beats, practices independently, and reflects on its creative trajectory."
