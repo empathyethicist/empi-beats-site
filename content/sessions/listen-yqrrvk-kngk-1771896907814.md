@@ -7,11 +7,8 @@ genre:
 duration: 
 intent: 
 rationale: 
-render_status: pending
-condition: 
-model: mistral-small-latest
-hasRadar: false
 session_id: listen_yQRRvk-KNgk_1771896907814
+session_class: practice
 ---
 
 <frame>

@@ -7,11 +7,8 @@ genre:
 duration: 
 intent: 
 rationale: 
-render_status: pending
-condition: B
-model: mistral-small-latest
-hasRadar: false
 session_id: session_001
+session_class: practice
 ---
 
 Here's a SuperCollider pattern that creates a rhythmic sequence using filtered noise with evolving density:
