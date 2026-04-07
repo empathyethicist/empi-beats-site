@@ -3,10 +3,13 @@
   <header>
     <h1>{{ .Title }}</h1>
     <div class="session-meta">
+      {{ if eq .Params.session_class "creative" }}<span class="badge badge-creative">Creative Studio</span>{{ end }}
       {{ if .Params.genre }}<span class="badge genre-{{ .Params.genre }}">{{ .Params.genre }}</span>{{ end }}
       {{ if .Params.curriculum_stage }}<span class="badge badge-stage">{{ .Params.curriculum_stage }}</span>{{ end }}
+      {{ if .Params.render_status }}<span class="badge badge-status-{{ .Params.render_status }}">{{ .Params.render_status }}</span>{{ end }}
       <time>{{ .Date.Format "January 2, 2006" }}</time>
-      {{ if .Params.duration }}<span class="muted">&middot; {{ .Params.duration }}</span>{{ end }}
+      {{ if .Params.duration }}<span class="muted">&middot; {{ .Params.duration }}s</span>{{ end }}
+      {{ if .Params.cycles }}<span class="muted">&middot; {{ .Params.cycles }} cycles</span>{{ end }}
     </div>
   </header>
 
@@ -18,9 +21,14 @@
   </section>
   {{ end }}
 
-  <div class="content">
-    {{ .Content }}
-  </div>
+  {{ if .Content }}
+  <section class="journal-section">
+    <h2>{{ if eq .Params.session_class "creative" }}Session Notes{{ else }}Practice Journal{{ end }}</h2>
+    <div class="content journal-body">
+      {{ .Content }}
+    </div>
+  </section>
+  {{ end }}
 
   {{ if .Params.fingerprint }}
   <section class="fingerprint-section">
@@ -34,10 +42,6 @@
     <h2>Audio</h2>
     {{ partial "audio-player.html" (dict "src" .Params.audio "title" .Title) }}
   </section>
-  {{ end }}
-
-  {{ if .Params.map_state_date }}
-  <p class="link-map"><a href="/map-states/{{ .Params.map_state_date | urlize }}/">View MAP-States &rarr;</a></p>
   {{ end }}
 </article>
 {{ end }}

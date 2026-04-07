@@ -305,8 +305,19 @@ function generateSketches() {
       session_id: id,
     };
 
-    if (data.intent_stack) fm.intent_stack = data.intent_stack;
-    if (data.reflection_data_summary) fm.data_summary = data.reflection_data_summary;
+    // Flatten nested objects into scalar fields (yamlFrontmatter doesn't serialize maps)
+    if (data.intent_stack && typeof data.intent_stack === 'object') {
+      if (data.intent_stack.aesthetic) fm.intent_aesthetic = data.intent_stack.aesthetic;
+      if (data.intent_stack.operational) fm.intent_operational = data.intent_stack.operational;
+      if (data.intent_stack.developmental_category) fm.intent_category = data.intent_stack.developmental_category;
+      if (data.intent_stack.self_coherence != null) fm.self_coherence = data.intent_stack.self_coherence;
+    }
+    if (data.reflection_data_summary && typeof data.reflection_data_summary === 'object') {
+      const s = data.reflection_data_summary;
+      if (s.rooms_active != null) fm.rooms_active = s.rooms_active;
+      if (s.contradictions != null) fm.contradictions = s.contradictions;
+      if (s.valence_points != null) fm.valence_points = s.valence_points;
+    }
 
     // Copy PNG to site static/img/sketches/
     const pngName = path.basename(file, '.json') + '.png';
@@ -327,6 +338,72 @@ function generateSketches() {
 // 3. MAP-States — nested maph_frames/<agent>/<uuid>/frames.jsonl
 // ---------------------------------------------------------------------------
 
+// Extract the actual state tag and note content from a MAPH frame.
+// Real structure:
+//   { frame: { tags: {dwell: "mix-balanced-nominal"}, raw: "<dwell>...</dwell>" }, ... }
+// Returns { state, note } — e.g., { state: "dwell", note: "mix-balanced-nominal" }
+function extractFrameNote(f) {
+  // Unwrap nested frame if present
+  const inner = f.frame || f;
+  let state = '';
+  let note = '';
+
+  // Try tags first (most common shape)
+  if (inner.tags && typeof inner.tags === 'object') {
+    const tagKeys = Object.keys(inner.tags);
+    if (tagKeys.length > 0) {
+      state = tagKeys[0];
+      note = inner.tags[state] || '';
+    }
+  }
+
+  // Fall back to parsing raw XML-style tag
+  if (!state && inner.raw) {
+    const match = inner.raw.match(/<(\w+)>([\s\S]*?)<\/\1>/);
+    if (match) {
+      state = match[1];
+      note = match[2].trim();
+    }
+  }
+
+  // Final fallbacks
+  if (!state) state = inner.state || inner.map_state || 'frame';
+  if (!note) note = inner.label || inner.description || inner.frame_content || '';
+
+  return { state, note };
+}
+
+// Collapse consecutive duplicate notes (MAPH emits same frame every 3s during dwell)
+function dedupeFrameNotes(frames) {
+  const result = [];
+  let lastKey = '';
+  let runStart = null;
+  let runCount = 0;
+
+  for (const f of frames) {
+    const { state, note } = extractFrameNote(f);
+    const ts = (f.frame && f.frame.timestamp) || f.timestamp || f.ts || '';
+    const key = state + ':' + note;
+
+    if (key === lastKey) {
+      runCount++;
+      continue;
+    }
+    // Emit the previous run's count if it was repeated
+    if (result.length > 0 && runCount > 1) {
+      result[result.length - 1].repeat = runCount;
+    }
+    result.push({ ts, state, note });
+    lastKey = key;
+    runCount = 1;
+    runStart = ts;
+  }
+  if (result.length > 0 && runCount > 1) {
+    result[result.length - 1].repeat = runCount;
+  }
+  return result;
+}
+
 function generateMapStates() {
   const framesDir = path.join(evidencePath, 'maph_frames');
   if (!fs.existsSync(framesDir)) {
@@ -345,37 +422,12 @@ function generateMapStates() {
   });
 
   for (const agentDir of agentDirs) {
+    // Only surface empi-primary frames on the public site — others are internal
+    if (agentDir !== 'empi-primary') continue;
+
     const agentPath = path.join(framesDir, agentDir);
 
-    // Handle direct .jsonl files at agent level
-    const directFiles = fs.readdirSync(agentPath).filter(f => f.endsWith('.jsonl'));
-    for (const file of directFiles) {
-      const frames = readJSONL(path.join(agentPath, file));
-      if (!frames.length) continue;
-
-      const dateStr = path.basename(file, '.jsonl');
-      const normalized = frames.map(f => ({
-        ts: f.timestamp || f.ts || '',
-        state: f.state || f.map_state || 'transition',
-        label: f.label || f.description || ''
-      }));
-
-      const fm = {
-        title: `MAP-States — ${agentDir} — ${dateStr}`,
-        date: frames[0].timestamp || frames[0].ts || dateStr,
-        agent: agentDir,
-        frame_count: frames.length,
-        hasSwimlane: true,
-        frames_json: JSON.stringify(normalized),
-      };
-
-      const slug = slugify(`${agentDir}-${dateStr}`);
-      const content = yamlFrontmatter(fm) + '\n\nCognitive state timeline for this session.\n';
-      writeFile(path.join(outDir, slug + '.md'), content);
-      count++;
-    }
-
-    // Walk UUID subdirs
+    // Walk UUID subdirs (primary structure)
     const uuidDirs = fs.readdirSync(agentPath).filter(d => {
       try { return fs.statSync(path.join(agentPath, d)).isDirectory(); } catch { return false; }
     });
@@ -384,31 +436,38 @@ function generateMapStates() {
       const framesPath = path.join(agentPath, uuidDir, 'frames.jsonl');
       if (!fs.existsSync(framesPath)) continue;
 
-      const frames = readJSONL(framesPath);
-      if (!frames.length) continue;
+      const rawFrames = readJSONL(framesPath);
+      if (!rawFrames.length) continue;
 
-      // Extract date from first frame timestamp or use UUID
-      const firstTs = frames[0].timestamp || frames[0].ts || '';
+      const notes = dedupeFrameNotes(rawFrames);
+      if (!notes.length) continue;
+
+      // Skip sessions that only have dwell-nominal noise (no real progression)
+      const uniqueStates = new Set(notes.map(n => n.state));
+      if (notes.length < 2 && uniqueStates.size === 1) continue;
+
+      const firstTs = (rawFrames[0].frame && rawFrames[0].frame.timestamp) || rawFrames[0].timestamp || '';
       const dateLabel = firstTs ? firstTs.split('T')[0] : uuidDir.slice(0, 8);
 
-      const normalized = frames.map(f => ({
-        ts: f.timestamp || f.ts || '',
-        state: f.state || f.map_state || 'transition',
-        label: f.label || f.description || ''
-      }));
+      // Render notes as a markdown feed — state + content
+      const body = notes.map(n => {
+        const time = n.ts ? new Date(n.ts).toISOString().split('T')[1].slice(0, 8) : '';
+        const repeat = n.repeat ? ` _(×${n.repeat})_` : '';
+        return `<div class="map-note map-state-${n.state}">\n<span class="map-time">${time}</span> <span class="map-tag">${n.state}</span>${repeat}\n\n${n.note || '—'}\n</div>`;
+      }).join('\n\n');
 
       const fm = {
-        title: `MAP-States — ${agentDir} — ${dateLabel}`,
+        title: `MAP-States — ${dateLabel}`,
         date: firstTs || new Date().toISOString(),
         agent: agentDir,
         session_uuid: uuidDir,
-        frame_count: frames.length,
-        hasSwimlane: true,
-        frames_json: JSON.stringify(normalized),
+        frame_count: rawFrames.length,
+        unique_notes: notes.length,
+        states: Array.from(uniqueStates),
       };
 
-      const slug = slugify(`${agentDir}-${uuidDir}`);
-      const content = yamlFrontmatter(fm) + '\n\nCognitive state timeline for this session.\n';
+      const slug = slugify(`${dateLabel}-${uuidDir.slice(0, 8)}`);
+      const content = yamlFrontmatter(fm) + '\n\n' + body + '\n';
       writeFile(path.join(outDir, slug + '.md'), content);
       count++;
     }

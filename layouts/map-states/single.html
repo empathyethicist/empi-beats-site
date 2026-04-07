@@ -1,15 +1,22 @@
 {{ define "main" }}
-<article class="single mapstate-detail">
+<article class="single mapstate-detail container">
   <header>
     <h1>{{ .Title }}</h1>
-    <time>{{ .Date.Format "January 2, 2006" }}</time>
+    <div class="mapstate-meta">
+      <time>{{ .Date.Format "January 2, 2006" }}</time>
+      {{ with .Params.frame_count }}<span class="muted">&middot; {{ . }} frames</span>{{ end }}
+      {{ with .Params.unique_notes }}<span class="muted">&middot; {{ . }} notes</span>{{ end }}
+    </div>
+    {{ with .Params.states }}
+    <div class="mapstate-tags">
+      {{ range . }}<span class="badge badge-state-{{ . }}">{{ . }}</span>{{ end }}
+    </div>
+    {{ end }}
   </header>
 
-  {{ if .Params.frames_json }}
-  {{ partial "swimlane.html" (dict "frames" .Params.frames_json) }}
-  {{ end }}
+  <p class="muted mapstate-intro">EMPI's internal state notes for this session. Each entry is a tagged observation emitted during processing.</p>
 
-  <div class="content">
+  <div class="mapstate-notes">
     {{ .Content }}
   </div>
 </article>

@@ -801,6 +801,27 @@ body::after {
   color: var(--muted);
 }
 
+/* Practice journal section */
+.journal-section {
+  margin: 2rem 0;
+}
+
+.journal-section h2 {
+  font-family: 'Courier New', Courier, monospace;
+  color: var(--accent);
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  letter-spacing: 0.03em;
+}
+
+.journal-body {
+  background: var(--surface);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 6px 6px 0;
+  padding: 1.25rem 1.5rem;
+  white-space: pre-wrap;
+}
+
 /* Creative session badge + card accent */
 .badge-creative {
   background: var(--cool-ambient);
@@ -810,6 +831,91 @@ body::after {
 .card.session-creative {
   border-left-color: var(--cool-ambient);
 }
+
+/* MAP-State notes feed */
+.mapstate-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.mapstate-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+}
+
+.mapstate-intro {
+  margin: 1.5rem 0;
+  font-style: italic;
+}
+
+.mapstate-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.map-note {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border);
+  border-radius: 4px;
+  padding: 0.9rem 1.15rem;
+  font-family: "SFMono-Regular", Consolas, Menlo, monospace;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--text);
+}
+
+.map-time {
+  color: var(--muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.03em;
+  margin-right: 0.5rem;
+}
+
+.map-tag {
+  display: inline-block;
+  padding: 0.1em 0.5em;
+  border-radius: 3px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--bg);
+  margin-right: 0.3rem;
+}
+
+/* Per-state color cues (border + tag bg) */
+.map-state-dwell { border-left-color: var(--state-dwell); }
+.map-state-dwell .map-tag { background: var(--state-dwell); }
+
+.map-state-shift { border-left-color: var(--state-shift); }
+.map-state-shift .map-tag { background: var(--state-shift); color: #fff; }
+
+.map-state-conflict { border-left-color: var(--state-conflict); }
+.map-state-conflict .map-tag { background: var(--state-conflict); color: #fff; }
+
+.map-state-anticipation { border-left-color: var(--state-anticipation); }
+.map-state-anticipation .map-tag { background: var(--state-anticipation); }
+
+.map-state-transition { border-left-color: var(--state-transition); }
+.map-state-transition .map-tag { background: var(--state-transition); }
+
+.map-state-frame { border-left-color: var(--accent); }
+.map-state-frame .map-tag { background: var(--accent); }
+
+.badge-state-dwell { background: var(--state-dwell); color: var(--bg); }
+.badge-state-shift { background: var(--state-shift); color: #fff; }
+.badge-state-conflict { background: var(--state-conflict); color: #fff; }
+.badge-state-anticipation { background: var(--state-anticipation); color: var(--bg); }
+.badge-state-transition { background: var(--state-transition); color: var(--bg); }
+.badge-state-frame { background: var(--accent); color: var(--bg); }
 
 /* Mobile responsive */
 @media (max-width: 640px) {
