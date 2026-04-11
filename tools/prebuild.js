@@ -112,6 +112,16 @@ function generateJournal() {
     if (dir.startsWith('R')) continue;  // Reflections
     if (dir.startsWith('D')) continue;  // Discovery
 
+    // 2026-04-11 filter: skip Slack-driven ephemeral sessions. Slack
+    // direction listener + dwell chat create transient /sessions/slack-*
+    // directories for every Slack message (including channel description
+    // events). These are NOT practice journal entries — they're chat
+    // artifacts. Filter them out by the `slack-` basename prefix.
+    // See docs/contracts/sentinel/proactive-communication.v1.md §#PC-4
+    // (venue inbox is the surface for Slack-driven interactions, not the
+    // public journal).
+    if (dir.toLowerCase().startsWith('slack-') || dir.toLowerCase().startsWith('slack_')) continue;
+
     // Detect session type by schema
     const hasInteractions = fs.existsSync(path.join(sessionPath, 'interactions.jsonl'));
     const hasSummary = fs.existsSync(path.join(sessionPath, 'summary.md'));
@@ -248,11 +258,73 @@ function generateDiscovery() {
 
     const interactions = readJSONL(path.join(sessionPath, 'interactions.jsonl'));
 
-    // Extract listening insights from interactions
+    // Extract listening insights from interactions (expanded field set)
     const notes = interactions
-      .map(i => i.prose || i.full_response || i.content || '')
+      .map(i => i.prose || i.full_response || i.content || i.opinion || i.insight || '')
       .filter(Boolean)
       .join('\n\n');
+
+    // Additional content sources: listening_insights.json
+    const listeningInsights = readJSON(path.join(sessionPath, 'listening_insights.json'));
+    const trackEntries = [];
+    let earSummary = '';
+
+    if (listeningInsights) {
+      // listening_insights.json may be an object or array
+      const items = Array.isArray(listeningInsights) ? listeningInsights : [listeningInsights];
+      for (const item of items) {
+        if (item.ear_summary) earSummary = earSummary || item.ear_summary;
+        if (item.track || item.title || item.artist) {
+          const trackLabel = [item.artist, item.title || item.track].filter(Boolean).join(' — ');
+          const opinion = item.opinion || item.insight || '';
+          trackEntries.push(trackLabel + (opinion ? ': ' + opinion : ''));
+        }
+        // Handle nested tracks array
+        if (Array.isArray(item.tracks)) {
+          for (const t of item.tracks) {
+            const tLabel = [t.artist, t.title || t.track].filter(Boolean).join(' — ');
+            const tOpinion = t.opinion || t.insight || '';
+            trackEntries.push(tLabel + (tOpinion ? ': ' + tOpinion : ''));
+          }
+        }
+      }
+    }
+
+    // Additional content sources: individual listening/*.json files
+    const listeningDir = path.join(sessionPath, 'listening');
+    if (fs.existsSync(listeningDir)) {
+      try {
+        const listeningFiles = fs.readdirSync(listeningDir).filter(f => f.endsWith('.json'));
+        for (const lf of listeningFiles) {
+          const ld = readJSON(path.join(listeningDir, lf));
+          if (!ld) continue;
+          if (ld.ear_summary) earSummary = earSummary || ld.ear_summary;
+          const lLabel = [ld.artist, ld.title || ld.track].filter(Boolean).join(' — ');
+          const lOpinion = ld.opinion || ld.insight || '';
+          if (lLabel) trackEntries.push(lLabel + (lOpinion ? ': ' + lOpinion : ''));
+        }
+      } catch (_) {}
+    }
+
+    // Also extract ear_summary from interactions
+    if (!earSummary) {
+      for (const i of interactions) {
+        if (i.ear_summary) { earSummary = i.ear_summary; break; }
+      }
+    }
+
+    // Build enriched body with sections
+    const bodyParts = [];
+    if (trackEntries.length > 0) {
+      bodyParts.push('## Tracks Explored\n\n' + trackEntries.map(t => '- ' + t).join('\n'));
+    }
+    if (notes) {
+      bodyParts.push(notes);
+    }
+    if (earSummary) {
+      bodyParts.push('## Ear Summary\n\n' + earSummary);
+    }
+    const body = bodyParts.join('\n\n');
 
     const id = meta.session_id || dir;
     const title = meta.title || meta.seed_topic || `Discovery ${id}`;
@@ -267,7 +339,7 @@ function generateDiscovery() {
       termination: meta.termination_reason || meta.termination || '',
     };
 
-    writeFile(path.join(outDir, slugify(id) + '.md'), yamlFrontmatter(fm) + '\n\n' + (notes || '') + '\n');
+    writeFile(path.join(outDir, slugify(id) + '.md'), yamlFrontmatter(fm) + '\n\n' + (body || '') + '\n');
     count++;
   }
 
@@ -826,6 +898,84 @@ function generateMusic() {
 }
 
 // ---------------------------------------------------------------------------
+// Status — CAE live creative state for homepage indicator
+// ---------------------------------------------------------------------------
+
+function generateStatus() {
+  const dataDir = path.join(__dirname, '..', 'data');
+  ensureDir(dataDir);
+
+  const thoughtsPath = path.join(evidencePath, 'daily_thoughts.md');
+  const decisionsPath = path.join(evidencePath, 'autonomy_decisions.jsonl');
+
+  const status = {
+    updated: null, orientation: null, persistent_threads: [],
+    fading: [], next_check_minutes: null, last_motivation: null,
+    last_genre: null, is_resting: false, has_data: false,
+  };
+
+  try {
+    const thoughts = fs.readFileSync(thoughtsPath, 'utf8');
+    if (thoughts.trim()) {
+      status.has_data = true;
+      const updatedMatch = thoughts.match(/\*Last updated:\s*(.+?)\*/);
+      if (updatedMatch) status.updated = updatedMatch[1].trim();
+
+      const currentMatch = thoughts.match(/## Current State\n([\s\S]*?)(?=\n## |\n*$)/);
+      if (currentMatch) {
+        const block = currentMatch[1];
+        const tagRe = /<(orientation|preference|conflict|shift)>([^<]+)<\/\1>/g;
+        let m;
+        const orientations = [];
+        while ((m = tagRe.exec(block)) !== null) orientations.push(m[2].trim());
+        if (orientations.length > 0) {
+          status.orientation = orientations[0].replace(/-/g, ' ').replace(/^\w/, c => c.toUpperCase());
+        }
+        if (block.includes('between-sessions-resting')) {
+          status.is_resting = true;
+          status.orientation = null;
+        }
+        const nextCheck = block.match(/next-check-(\d+)-minutes/);
+        if (nextCheck) status.next_check_minutes = parseInt(nextCheck[1], 10);
+      }
+
+      const persistMatch = thoughts.match(/## Persistent Threads\n([\s\S]*?)(?=\n## |\n*$)/);
+      if (persistMatch) {
+        for (const line of persistMatch[1].trim().split('\n').filter(Boolean)) {
+          const tm = line.match(/<\w+>([^<]+)<\/\w+>/);
+          if (tm) status.persistent_threads.push(tm[1].trim().replace(/-/g, ' ').replace(/^\w/, c => c.toUpperCase()));
+        }
+      }
+
+      const fadingMatch = thoughts.match(/## Fading\n([\s\S]*?)(?=\n## |\n*$)/);
+      if (fadingMatch) {
+        for (const line of fadingMatch[1].trim().split('\n').filter(Boolean)) {
+          const tm = line.match(/<\w+>([^<]+)<\/\w+>/);
+          if (tm) status.fading.push(tm[1].trim().replace(/-/g, ' '));
+        }
+      }
+    }
+  } catch (_) { /* no daily thoughts yet */ }
+
+  try {
+    const lines = fs.readFileSync(decisionsPath, 'utf8').trim().split('\n');
+    if (lines.length > 0) {
+      const last = JSON.parse(lines[lines.length - 1]);
+      if (last.session_opts) {
+        status.last_motivation = last.session_opts.motivation || null;
+        status.last_genre = last.session_opts.genre || null;
+      }
+      if (!status.updated && last.timestamp) status.updated = last.timestamp;
+      status.has_data = true;
+    }
+  } catch (_) { /* no decisions yet */ }
+
+  writeFile(path.join(dataDir, 'status.json'), JSON.stringify(status, null, 2));
+  console.log('  Status: ' + (status.has_data ? 'generated' : 'no data'));
+  return status.has_data ? 1 : 0;
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
@@ -841,6 +991,7 @@ const reflectionCount = generateReflections();
 const sketchCount = generateSketches();
 const mapStateCount = generateMapStates();
 const musicCount = generateMusic();
+const statusOk = generateStatus();
 
 console.log('');
-console.log(`Summary: ${journalCount} journal, ${discoveryCount} discovery, ${reflectionCount} reflections, ${sketchCount} sketches, ${mapStateCount} MAP-states, ${musicCount} music`);
+console.log(`Summary: ${journalCount} journal, ${discoveryCount} discovery, ${reflectionCount} reflections, ${sketchCount} sketches, ${mapStateCount} MAP-states, ${musicCount} music, status ${statusOk ? 'ok' : 'no data'}`);
