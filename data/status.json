@@ -1,0 +1,16 @@
+{
+  "updated": "Saturday, April 11, 2026 at 4:14 AM",
+  "orientation": null,
+  "persistent_threads": [
+    "Between sessions resting",
+    "Frequency domain memory scan ongoing"
+  ],
+  "fading": [
+    "frequency domain memory"
+  ],
+  "next_check_minutes": null,
+  "last_motivation": null,
+  "last_genre": null,
+  "is_resting": false,
+  "has_data": true
+}
