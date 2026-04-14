@@ -1,0 +1,40 @@
+{{ $status := .Site.Data.status }}
+{{ if and $status $status.has_data }}
+<section class="section container">
+<div class="status-card">
+  <div class="status-header">
+    <div class="status-avatar">
+      <img src="/img/empi-hero.png" alt="EMPI" class="pixel-render">
+      <span class="status-dot {{ if $status.is_resting }}resting{{ else }}active{{ end }}"></span>
+    </div>
+    <div class="status-identity">
+      <span class="status-name">EMPI</span>
+      <span class="status-time">{{ $status.updated }}</span>
+    </div>
+  </div>
+  <div class="status-body">
+    {{ if $status.is_resting }}
+      <p class="status-text">Between sessions — resting.</p>
+    {{ else }}
+      {{ with $status.orientation }}
+      <p class="status-text">{{ . }}</p>
+      {{ end }}
+      {{ if $status.persistent_threads }}
+      <div class="status-threads">
+        <span class="threads-label">On my mind:</span>
+        {{ range $status.persistent_threads }}
+          <span class="thread-tag">{{ . }}</span>
+        {{ end }}
+      </div>
+      {{ end }}
+    {{ end }}
+    {{ if and (not $status.is_resting) (or $status.last_genre $status.next_check_minutes) }}
+    <div class="status-footer">
+      {{ with $status.last_genre }}<span class="badge genre-{{ . }}">{{ . }}</span>{{ end }}
+      {{ with $status.next_check_minutes }}<span class="status-next">Next check-in: {{ . }}min</span>{{ end }}
+    </div>
+    {{ end }}
+  </div>
+</div>
+</section>
+{{ end }}
