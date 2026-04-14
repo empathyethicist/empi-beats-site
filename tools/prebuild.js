@@ -178,6 +178,10 @@ function generateJournal() {
     const id = meta.session_id || dir;
     const decision = meta.decision || {};
 
+    // Skip failed renders — no audio, no fingerprint, noise on the public site.
+    // Evidence stays in Falkner; the site only shows sessions that produced output.
+    if (meta.render_ok === false) continue;
+
     // Extract journal/prose from interactions
     const interactions = readJSONL(path.join(sessionPath, 'interactions.jsonl'));
     const journal = interactions
