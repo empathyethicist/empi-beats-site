@@ -5,6 +5,8 @@ type: reflection
 session_id: 0bf22872-f600-437f-acfa-bb7b6c28052b
 reflection_class: session
 cycles: 9
+map_states:
+  - "[object Object]"
 ---
 
 Session 0bf22872-f600-437f-acfa-bb7b6c28052b: 9 cycles completed over 11 minutes. 0 SAPF expressions executed, 0 produced audio output, 0 errors encountered. Processing oriented toward iterative refinement within cycle budget.

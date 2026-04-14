@@ -9,6 +9,7 @@ intent:
 rationale: 
 session_id: listen_yQRRvk-KNgk_1771896907814
 session_class: practice
+render_status: success
 ---
 
 <frame>

@@ -5,6 +5,8 @@ type: reflection
 session_id: 7eaa4be2-ab35-4a86-b1e8-fae16b68abfa
 reflection_class: session
 cycles: 8
+map_states:
+  - "[object Object]"
 ---
 
 Perception indicates zero production cycles, suggesting a potential calibration interruption in execution pathway. Intent coherence appears compromised, with no active SAPF expression detected across session cycles. Execution precision rates as non-operational, signaling potential system recalibration required.

@@ -6,6 +6,8 @@ cycles: 43
 duration_ms: 606409
 session_id: db9a56eb-170d-4f9a-ac13-b28d54efedda
 session_class: creative
+map_states:
+  - "[object Object]"
 ---
 
 ## Reflection

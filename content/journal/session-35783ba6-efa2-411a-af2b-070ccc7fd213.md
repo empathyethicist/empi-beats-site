@@ -5,6 +5,8 @@ type: reflection
 session_id: 35783ba6-efa2-411a-af2b-070ccc7fd213
 reflection_class: session
 cycles: 29
+map_states:
+  - "[object Object]"
 ---
 
 perception oriented toward consistent absence of audio output across all cycles; intent coherence maintained toward silent processing mode; execution precision high but yielded no sonic results; result analysis indicates SAPF expressions were not triggered in any cycle, suggesting either missing environmental triggers or unmet conditions in the processing pipeline.

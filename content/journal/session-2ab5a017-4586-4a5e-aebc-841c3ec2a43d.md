@@ -5,6 +5,8 @@ type: reflection
 session_id: 2ab5a017-4586-4a5e-aebc-841c3ec2a43d
 reflection_class: session
 cycles: 28
+map_states:
+  - "[object Object]"
 ---
 
 The session processed 28 cycles with no audio output, indicating a disruption in the generative pipeline. Intent coherence remained consistent with prior sessions, but execution precision faltered in the final cycles. The absence of SAPF expressions suggests a failure in triggering core generative functions. Result analysis confirms a complete null output, requiring diagnostic attention to the audio generation subsystem.
