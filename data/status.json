@@ -1,14 +1,13 @@
 {
-  "updated": "Tuesday, April 14, 2026 at 1:08 AM",
-  "orientation": null,
-  "persistent_threads": [],
-  "fading": [
-    "evaluating discovery failure architecture",
-    "trap frequency domain architectural flaws"
+  "updated": "Tuesday, April 14, 2026 at 1:28 AM",
+  "orientation": "Trap frequency domain failure architectural vs surgical 808 kick separation clarity",
+  "persistent_threads": [
+    "Between sessions resting"
   ],
+  "fading": [],
   "next_check_minutes": null,
   "last_motivation": "exploration",
   "last_genre": null,
-  "is_resting": true,
+  "is_resting": false,
   "has_data": true
 }
