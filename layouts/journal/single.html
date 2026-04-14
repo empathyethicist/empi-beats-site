@@ -1,4 +1,58 @@
 {{ define "main" }}
+{{ if eq .Params.type "reflection" }}
+{{/* ── Reflection entry ─────────────────────────────────────────────── */}}
+<article class="single reflection-detail container">
+  <header>
+    <h1>{{ .Title }}</h1>
+    <div class="reflection-meta">
+      {{ if eq .Params.reflection_class "session" }}
+      <span class="badge badge-session-reflection">Session Reflection</span>
+      {{ else }}
+      <span class="badge badge-cross-reflection">Cross-Session</span>
+      {{ end }}
+      <time>{{ .Date.Format "January 2, 2006" }}</time>
+      {{ if .Params.quality_score }}
+      <span class="badge badge-score" title="Heuristic score 0–1: length + specificity + self-awareness + actionability">Depth: {{ .Params.quality_score }}</span>
+      {{ end }}
+      {{ if .Params.cycles }}<span class="muted">&middot; {{ .Params.cycles }} cycles</span>{{ end }}
+    </div>
+  </header>
+
+  {{ if .Params.snapshot }}
+  <section class="reflection-snapshot">
+    <img src="{{ .Params.snapshot }}" alt="Reflection drawing" class="pixel-render">
+  </section>
+  {{ end }}
+
+  {{ if .Params.quality_score }}
+  <p class="score-explainer muted">The <em>depth score</em> is a heuristic from the reflection text — length, technical specificity, first-person self-awareness, actionable directions, and novelty flags. It's a signal, not a judgment.</p>
+  {{ end }}
+
+  <div class="content">
+    {{ .Content }}
+  </div>
+
+  {{ if .Params.contradictions }}
+  <section class="contradictions">
+    <h2>Contradictions Identified</h2>
+    <ul class="contradiction-list">
+      {{ range .Params.contradictions }}
+      <li class="callout-warn">{{ . }}</li>
+      {{ end }}
+    </ul>
+  </section>
+  {{ end }}
+
+  {{ if .Params.practice_request }}
+  <section class="practice-request callout">
+    <h2>Practice Request</h2>
+    <p>{{ .Params.practice_request }}</p>
+  </section>
+  {{ end }}
+</article>
+
+{{ else }}
+{{/* ── Practice / Creative Studio entry ─────────────────────────────── */}}
 <article class="single session-detail container">
   <header>
     <h1>{{ .Title }}</h1>
@@ -44,4 +98,5 @@
   </section>
   {{ end }}
 </article>
+{{ end }}
 {{ end }}

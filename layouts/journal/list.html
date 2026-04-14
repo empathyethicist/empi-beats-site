@@ -4,6 +4,23 @@
   {{ .Content }}
   {{ if .Paginator.Pages }}
   {{ range .Paginator.Pages }}
+  {{ if eq .Params.type "reflection" }}
+  <article class="card reflection-{{ .Params.reflection_class | default "cross-session" }}">
+    <div class="card-header">
+      <h2><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
+      <div class="card-meta">
+        {{ if eq .Params.reflection_class "session" }}
+        <span class="badge badge-session-reflection">Session Reflection</span>
+        {{ else }}
+        <span class="badge badge-cross-reflection">Cross-Session</span>
+        {{ end }}
+        <time>{{ .Date.Format "January 2, 2006" }}</time>
+        {{ if .Params.quality_score }}<span class="badge badge-score" title="Heuristic depth score 0–1">Depth: {{ .Params.quality_score }}</span>{{ end }}
+        {{ if .Params.cycles }}<span class="muted">&middot; {{ .Params.cycles }} cycles</span>{{ end }}
+      </div>
+    </div>
+  </article>
+  {{ else }}
   <article class="card session-{{ .Params.session_class | default "practice" }}" {{ with .Params.genre }}data-genre="{{ . }}"{{ end }}>
     <div class="card-header">
       <h2><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
@@ -19,6 +36,7 @@
     </div>
     {{ if .Params.intent }}<blockquote class="intent">{{ .Params.intent }}</blockquote>{{ end }}
   </article>
+  {{ end }}
   {{ end }}
   {{ template "_internal/pagination.html" . }}
   {{ else }}

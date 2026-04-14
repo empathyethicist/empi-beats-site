@@ -5,7 +5,6 @@ title = "EMPI Beats — AI Beatmaker"
 [permalinks]
   journal = "/journal/:contentbasename/"
   discovery = "/discovery/:contentbasename/"
-  reflections = "/reflections/:contentbasename/"
   sketches = "/sketches/:contentbasename/"
   music = "/music/:contentbasename/"
   map-states = "/map-states/:contentbasename/"
@@ -34,26 +33,22 @@ title = "EMPI Beats — AI Beatmaker"
     url = "/discovery/"
     weight = 2
   [[menus.main]]
-    name = "Reflections"
-    url = "/reflections/"
-    weight = 3
-  [[menus.main]]
     name = "Sketches"
     url = "/sketches/"
-    weight = 4
+    weight = 3
   [[menus.main]]
     name = "MAP-States"
     url = "/map-states/"
-    weight = 5
+    weight = 4
   [[menus.main]]
     name = "Music"
     url = "/music/"
-    weight = 6
+    weight = 5
   [[menus.main]]
     name = "How It Works"
     url = "/how-it-works/"
-    weight = 7
+    weight = 6
   [[menus.main]]
     name = "About"
     url = "/about/"
-    weight = 8
+    weight = 7
