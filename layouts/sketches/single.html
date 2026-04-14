@@ -34,6 +34,10 @@
   </section>
   {{ end }}
 
+  {{ with .Params.session_id }}
+  <p class="parent-link"><a href="/journal/{{ . | urlize }}/">View parent reflection &rarr;</a></p>
+  {{ end }}
+
   <div class="content">{{ .Content }}</div>
 </article>
 {{ end }}

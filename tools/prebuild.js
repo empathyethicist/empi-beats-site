@@ -990,9 +990,9 @@ const journalCount = generateJournal();
 const discoveryCount = generateDiscovery();
 const reflectionCount = generateReflections();
 const sketchCount = generateSketches();
-const mapStateCount = generateMapStates();
+const mapStateCount = 0; // MAP-States section removed — frames live in journal entry bodies
 const musicCount = generateMusic();
 const statusOk = generateStatus();
 
 console.log('');
-console.log(`Summary: ${journalCount} journal, ${discoveryCount} discovery, ${reflectionCount} reflections (→journal), ${sketchCount} sketches, ${mapStateCount} MAP-states, ${musicCount} music, status ${statusOk ? 'ok' : 'no data'}`);
+console.log(`Summary: ${journalCount} journal, ${discoveryCount} discovery, ${reflectionCount} reflections (→journal), ${sketchCount} sketches, ${musicCount} music, status ${statusOk ? 'ok' : 'no data'}`);

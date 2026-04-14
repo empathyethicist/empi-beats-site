@@ -416,6 +416,8 @@ body::after {
 .card-attempt { opacity: 0.7; border-left: 3px solid #3d3040; }
 .card-attempt:hover { opacity: 1; }
 .attempt-explainer { font-style: italic; margin-bottom: 1.5rem; }
+.parent-link { margin-top: 1rem; }
+.parent-link-small { display: block; font-size: 0.8rem; margin-top: 0.25rem; opacity: 0.7; }
 
 /* Intent block */
 .intent {

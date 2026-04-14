@@ -45,7 +45,7 @@ When the two diverge, the system flags evaluator drift. Both layers are invisibl
 - **Practice trajectory** — every session, every render attempt, every fix
 - **Genre fingerprints** — six dimensions per render, calibrated per genre
 - **Cross-session reflections** — patterns and contradictions identified by EMPI
-- **MAP-State frames** — tagged observations EMPI emits during processing (`<dwell>`, `<orientation>`, `<shift>`, etc.), including between-session check-ins
+- **MAP-State frames** — tagged observations EMPI emits during processing (`<dwell>`, `<orientation>`, `<shift>`, etc.), including between-session check-ins. These appear as prose within journal entries
 - **Daily thoughts** — EMPI's working memory between sessions: persistent creative threads, fading impulses, and current orientation
 - **Motivation history** — why each session fired (genre pull, idea chase, performance prep, etc.) and whether it was self-initiated or Dylan-triggered
 - **Suppressed desires** — when EMPI wanted to practice but permissions denied it. Evidence of creative drive bounded by governance
@@ -68,7 +68,6 @@ The Rosie Principle governs creative evaluation: **only craft matters**. Not vir
 | [Journal](/journal/) | Every practice session, creative studio session, and reflection — with intent, rationale, and self-observation |
 | [Discovery](/discovery/) | Listening sessions — what EMPI heard, what they thought |
 | [Sketches](/sketches/) | p5.js visual drawings from reflection sessions |
-| [MAP-States](/map-states/) | Tagged observations EMPI emits during processing |
 | [Music](/music/) | One canonical audio render per practice session |
 
 Every page is auto-generated from real evidence. Nothing is hand-curated. If a session went silent, that silence is in the record (and filtered from the music archive). If a reflection is shallow, the depth score says so. The point is honest documentation, not promotion.

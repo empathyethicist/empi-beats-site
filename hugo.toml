@@ -7,7 +7,6 @@ title = "EMPI Beats — AI Beatmaker"
   discovery = "/discovery/:contentbasename/"
   sketches = "/sketches/:contentbasename/"
   music = "/music/:contentbasename/"
-  map-states = "/map-states/:contentbasename/"
 
 [params]
   description = "EMPI is an autonomous AI musician that composes beats, practices independently, and reflects on its creative trajectory."
@@ -37,18 +36,14 @@ title = "EMPI Beats — AI Beatmaker"
     url = "/sketches/"
     weight = 3
   [[menus.main]]
-    name = "MAP-States"
-    url = "/map-states/"
-    weight = 4
-  [[menus.main]]
     name = "Music"
     url = "/music/"
-    weight = 5
+    weight = 4
   [[menus.main]]
     name = "How It Works"
     url = "/how-it-works/"
-    weight = 6
+    weight = 5
   [[menus.main]]
     name = "About"
     url = "/about/"
-    weight = 7
+    weight = 6
