@@ -354,7 +354,7 @@ function generateReflections() {
   const sessionsDir = path.join(evidencePath, 'sessions');
   if (!fs.existsSync(sessionsDir)) return 0;
 
-  const outDir = path.join(contentDir, 'reflections');
+  const outDir = path.join(contentDir, 'journal');
   ensureDir(outDir);
 
   let count = 0;
@@ -375,6 +375,7 @@ function generateReflections() {
     const fm = {
       title: meta.title || `Reflection ${dir}`,
       date: meta.started || meta.created || meta.completed || new Date().toISOString(),
+      type: 'reflection',
       quality_score: meta.quality_score || '',
       quality_level: meta.quality_level || '',
       session_id: dir,
@@ -423,6 +424,7 @@ function generateReflections() {
     const fm = {
       title: `Session Reflection — ${shortDate}`,
       date: dateStr || new Date().toISOString(),
+      type: 'reflection',
       session_id: dir,
       reflection_class: 'session',
       cycles: refl.cycles_reflected || meta.cycles_completed || 0,
@@ -994,4 +996,4 @@ const musicCount = generateMusic();
 const statusOk = generateStatus();
 
 console.log('');
-console.log(`Summary: ${journalCount} journal, ${discoveryCount} discovery, ${reflectionCount} reflections, ${sketchCount} sketches, ${mapStateCount} MAP-states, ${musicCount} music, status ${statusOk ? 'ok' : 'no data'}`);
+console.log(`Summary: ${journalCount} journal, ${discoveryCount} discovery, ${reflectionCount} reflections (→journal), ${sketchCount} sketches, ${mapStateCount} MAP-states, ${musicCount} music, status ${statusOk ? 'ok' : 'no data'}`);
