@@ -529,6 +529,26 @@ function parseXmlFrameString(str) {
 // 4. Music — one canonical WAV per practice session, converted to MP3
 // ---------------------------------------------------------------------------
 
+// Get duration in seconds for an audio file (returns 0 on failure).
+// Used to filter out test renders (~3s) from the public music archive.
+function getAudioDurationSec(audioPath) {
+  if (dryRun) return 60;
+  try {
+    const { spawnSync } = require('child_process');
+    const result = spawnSync('ffprobe', [
+      '-v', 'error',
+      '-show_entries', 'format=duration',
+      '-of', 'default=noprint_wrappers=1:nokey=1',
+      audioPath,
+    ], { timeout: 10000, encoding: 'utf8' });
+    return parseFloat(result.stdout) || 0;
+  } catch (_) {
+    return 0;
+  }
+}
+
+const MIN_TRACK_DURATION_SEC = 5;
+
 // Get mean volume in dB for a WAV (returns -Infinity on failure)
 function getWavMeanDb(wavPath) {
   if (dryRun) return 0; // skip in dry-run
@@ -650,6 +670,7 @@ function generateMusic() {
   let converted = 0;
   let skipped = 0;
   let silent = 0;
+  let tooShort = 0;
 
   const dirs = fs.readdirSync(sessionsDir).filter(d => {
     if (!d.startsWith('P')) return false;
@@ -670,6 +691,19 @@ function generateMusic() {
     if (!wavPath) {
       silent++;
       // Clean up any stale MP3 from a previous run that picked a silent file
+      const staleName = sessionId.toLowerCase() + '.mp3';
+      const stalePath = path.join(audioDir, staleName);
+      if (fs.existsSync(stalePath) && !dryRun) {
+        try { fs.unlinkSync(stalePath); } catch (_) {}
+      }
+      continue;
+    }
+
+    // Filter test renders — anything shorter than MIN_TRACK_DURATION_SEC
+    // is treated as a test (3-second renders observed during synth probing).
+    const durationSec = getAudioDurationSec(wavPath);
+    if (durationSec > 0 && durationSec < MIN_TRACK_DURATION_SEC) {
+      tooShort++;
       const staleName = sessionId.toLowerCase() + '.mp3';
       const stalePath = path.join(audioDir, staleName);
       if (fs.existsSync(stalePath) && !dryRun) {
@@ -720,6 +754,7 @@ function generateMusic() {
 
   if (converted > 0) console.log(`  ${converted} MP3s ready in static/audio/`);
   if (silent > 0) console.log(`  ${silent} silent renders skipped`);
+  if (tooShort > 0) console.log(`  ${tooShort} short renders skipped (< ${MIN_TRACK_DURATION_SEC}s)`);
   return count;
 }
 
@@ -819,5 +854,38 @@ const mapStateCount = 0; // MAP-States section removed — frames live in journa
 const musicCount = generateMusic();
 const statusOk = generateStatus();
 
+// Sweep stale music entries: any content/music/*.md whose audio MP3 is missing.
+// Generators only write new files — they don't clean up entries that should now be
+// excluded (silent, too short, render_ok=false). The sweep keeps the music section
+// consistent with what's actually in static/audio/.
+const sweptMusic = sweepStaleMusic();
+
 console.log('');
 console.log(`Summary: ${journalCount} journal, ${discoveryCount} discovery, ${reflectionCount} reflections (→journal), ${sketchCount} sketches, ${musicCount} music, status ${statusOk ? 'ok' : 'no data'}`);
+if (sweptMusic > 0) console.log(`  Swept ${sweptMusic} stale music entries`);
+
+function sweepStaleMusic() {
+  const musicContentDir = path.join(contentDir, 'music');
+  const audioDir = path.join(__dirname, '..', 'static', 'audio');
+  if (!fs.existsSync(musicContentDir)) return 0;
+
+  let swept = 0;
+  let entries = [];
+  try { entries = fs.readdirSync(musicContentDir); } catch (_) { return 0; }
+
+  for (const entry of entries) {
+    if (!entry.endsWith('.md') || entry === '_index.md') continue;
+    const slug = entry.replace(/\.md$/, '');
+    const mp3Path = path.join(audioDir, slug + '.mp3');
+    if (fs.existsSync(mp3Path)) continue;
+
+    const mdPath = path.join(musicContentDir, entry);
+    if (!dryRun) {
+      try { fs.unlinkSync(mdPath); swept++; }
+      catch (_) {}
+    } else {
+      swept++;
+    }
+  }
+  return swept;
+}
