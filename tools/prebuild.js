@@ -178,9 +178,7 @@ function generateJournal() {
     const id = meta.session_id || dir;
     const decision = meta.decision || {};
 
-    // Skip failed renders — no audio, no fingerprint, noise on the public site.
-    // Evidence stays in Falkner; the site only shows sessions that produced output.
-    if (meta.render_ok === false) continue;
+    const isAttempt = meta.render_ok === false;
 
     // Extract journal/prose from interactions
     const interactions = readJSONL(path.join(sessionPath, 'interactions.jsonl'));
@@ -212,7 +210,7 @@ function generateJournal() {
     const fm = {
       title: meta.title || `Session ${id}`,
       date: meta.started || meta.timestamp || new Date().toISOString(),
-      type: meta.type || '',
+      type: isAttempt ? 'attempt' : (meta.type || ''),
       domain: meta.domain || '',
       genre: meta.genre || meta.domain || '',
       duration: decision.duration || meta.duration || '',
@@ -220,11 +218,8 @@ function generateJournal() {
       rationale: decision.rationale || '',
       session_id: id,
       session_class: 'practice',
+      render_status: isAttempt ? 'failed' : 'success',
     };
-
-    // Only set render_status when known — let template skip the badge otherwise
-    if (meta.render_ok === true) fm.render_status = 'success';
-    else if (meta.render_ok === false) fm.render_status = 'failed';
 
     if (fingerprint) { fm.fingerprint = fingerprint; fm.hasRadar = true; }
     if (audio) fm.audio = audio;

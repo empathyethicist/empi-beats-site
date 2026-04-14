@@ -51,6 +51,39 @@
   {{ end }}
 </article>
 
+{{ else if eq .Params.type "attempt" }}
+{{/* ── Attempt (failed render) entry ────────────────────────────────── */}}
+<article class="single attempt-detail container">
+  <header>
+    <h1>{{ .Title }}</h1>
+    <div class="session-meta">
+      <span class="badge badge-attempt">Attempt</span>
+      {{ if .Params.genre }}<span class="badge genre-{{ .Params.genre }}">{{ .Params.genre }}</span>{{ end }}
+      <time>{{ .Date.Format "January 2, 2006" }}</time>
+      {{ if .Params.duration }}<span class="muted">&middot; {{ .Params.duration }}s</span>{{ end }}
+    </div>
+  </header>
+
+  <p class="attempt-explainer muted">This session did not produce audio output. The intent and creative process are documented below.</p>
+
+  {{ if .Params.intent }}
+  <section class="intent-block">
+    <h2>Intent</h2>
+    <blockquote class="intent">{{ .Params.intent }}</blockquote>
+    {{ if .Params.rationale }}<p class="rationale">{{ .Params.rationale }}</p>{{ end }}
+  </section>
+  {{ end }}
+
+  {{ if .Content }}
+  <section class="journal-section">
+    <h2>Process Notes</h2>
+    <div class="content journal-body">
+      {{ .Content }}
+    </div>
+  </section>
+  {{ end }}
+</article>
+
 {{ else }}
 {{/* ── Practice / Creative Studio entry ─────────────────────────────── */}}
 <article class="single session-detail container">

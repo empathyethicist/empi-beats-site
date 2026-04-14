@@ -412,6 +412,10 @@ body::after {
 .badge-status-success { background: #2d5a3d; color: #a0e8b8; }
 .badge-status-failed { background: #5a2d2d; color: #e8a0a0; }
 .badge-status-pending { background: #5a4e2d; color: #e8d8a0; }
+.badge-attempt { background: #3d3040; color: #c0a8cc; }
+.card-attempt { opacity: 0.7; border-left: 3px solid #3d3040; }
+.card-attempt:hover { opacity: 1; }
+.attempt-explainer { font-style: italic; margin-bottom: 1.5rem; }
 
 /* Intent block */
 .intent {
@@ -1016,4 +1020,97 @@ body::after {
   .container { padding: 0 1rem; }
   .footer-inner { flex-direction: column; text-align: center; }
   .footer-links { justify-content: center; }
+}
+
+/* --- Status Card (CAE live indicator) --- */
+.status-card {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 1.25rem 1.5rem;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  border-left: 3px solid var(--accent);
+}
+.status-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.status-avatar {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+}
+.status-avatar img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  image-rendering: pixelated;
+}
+.status-dot {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--surface-elevated);
+}
+.status-dot.active { background: #4CAF50; }
+.status-dot.resting { background: var(--muted); }
+.status-identity {
+  display: flex;
+  flex-direction: column;
+}
+.status-name {
+  font-weight: 700;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+.status-time {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.status-body { margin-top: 0.25rem; }
+.status-text {
+  font-size: 1.05rem;
+  color: var(--text);
+  margin: 0 0 0.75rem 0;
+  line-height: 1.5;
+}
+.status-threads {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+.threads-label {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-right: 0.25rem;
+}
+.thread-tag {
+  background: var(--surface);
+  color: var(--link);
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  border: 1px solid var(--border);
+}
+.status-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+}
+.status-next {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-left: auto;
 }

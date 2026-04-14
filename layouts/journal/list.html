@@ -20,6 +20,19 @@
       </div>
     </div>
   </article>
+  {{ else if eq .Params.type "attempt" }}
+  <article class="card card-attempt" {{ with .Params.genre }}data-genre="{{ . }}"{{ end }}>
+    <div class="card-header">
+      <h2><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
+      <div class="card-meta">
+        <span class="badge badge-attempt">Attempt</span>
+        {{ if .Params.genre }}<span class="badge genre-{{ .Params.genre }}">{{ .Params.genre }}</span>{{ end }}
+        <time>{{ .Date.Format "January 2, 2006" }}</time>
+        {{ if .Params.duration }}<span class="muted">&middot; {{ .Params.duration }}s</span>{{ end }}
+      </div>
+    </div>
+    {{ if .Params.intent }}<blockquote class="intent">{{ .Params.intent }}</blockquote>{{ end }}
+  </article>
   {{ else }}
   <article class="card session-{{ .Params.session_class | default "practice" }}" {{ with .Params.genre }}data-genre="{{ . }}"{{ end }}>
     <div class="card-header">
