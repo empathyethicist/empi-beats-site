@@ -148,7 +148,9 @@ function generateJournal() {
       const syntheticTitle = `Creative Session — ${dateStr}, ${sessionType}`;
 
       // Body from reflection + summary
-      const mapStatesFrame = (refl.map_states_frame || '').replace(/<[^>]+>/g, '').trim();
+      const rawMapFrame = refl.map_states_frame || '';
+      const mapStatesFrame = rawMapFrame.replace(/<[^>]+>/g, '').trim();
+      const mapStates = parseXmlFrameString(rawMapFrame);
       const rationale = refl.five_things_rationale || '';
       let summaryMd = '';
       try { summaryMd = fs.readFileSync(path.join(sessionPath, 'summary.md'), 'utf8'); } catch (_) {}
@@ -168,6 +170,7 @@ function generateJournal() {
         session_id: meta.session_id || dir,
         session_class: 'creative',
       };
+      if (mapStates.length > 0) fm.map_states = mapStates;
 
       writeFile(path.join(outDir, slugify(dir) + '.md'), yamlFrontmatter(fm) + '\n\n' + body + '\n');
       count++;
@@ -420,6 +423,8 @@ function generateReflections() {
       ? new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
       : 'Session Reflection';
 
+    const mapStates = parseXmlFrameString(rawFrame);
+
     const fm = {
       title: `Session Reflection — ${shortDate}`,
       date: dateStr || new Date().toISOString(),
@@ -428,6 +433,7 @@ function generateReflections() {
       reflection_class: 'session',
       cycles: refl.cycles_reflected || meta.cycles_completed || 0,
     };
+    if (mapStates.length > 0) fm.map_states = mapStates;
 
     const body = cleanText + (rationale ? '\n\n**Five Things rationale:** ' + rationale : '');
 
@@ -504,74 +510,8 @@ function generateSketches() {
 }
 
 // ---------------------------------------------------------------------------
-// 3. MAP-States — nested maph_frames/<agent>/<uuid>/frames.jsonl
+// 3. MAP-States helpers (timeline extraction for reflection entries)
 // ---------------------------------------------------------------------------
-
-// Extract the actual state tag and note content from a MAPH frame.
-// Real structure:
-//   { frame: { tags: {dwell: "mix-balanced-nominal"}, raw: "<dwell>...</dwell>" }, ... }
-// Returns { state, note } — e.g., { state: "dwell", note: "mix-balanced-nominal" }
-function extractFrameNote(f) {
-  // Unwrap nested frame if present
-  const inner = f.frame || f;
-  let state = '';
-  let note = '';
-
-  // Try tags first (most common shape)
-  if (inner.tags && typeof inner.tags === 'object') {
-    const tagKeys = Object.keys(inner.tags);
-    if (tagKeys.length > 0) {
-      state = tagKeys[0];
-      note = inner.tags[state] || '';
-    }
-  }
-
-  // Fall back to parsing raw XML-style tag
-  if (!state && inner.raw) {
-    const match = inner.raw.match(/<(\w+)>([\s\S]*?)<\/\1>/);
-    if (match) {
-      state = match[1];
-      note = match[2].trim();
-    }
-  }
-
-  // Final fallbacks
-  if (!state) state = inner.state || inner.map_state || 'frame';
-  if (!note) note = inner.label || inner.description || inner.frame_content || '';
-
-  return { state, note };
-}
-
-// Collapse consecutive duplicate notes (MAPH emits same frame every 3s during dwell)
-function dedupeFrameNotes(frames) {
-  const result = [];
-  let lastKey = '';
-  let runStart = null;
-  let runCount = 0;
-
-  for (const f of frames) {
-    const { state, note } = extractFrameNote(f);
-    const ts = (f.frame && f.frame.timestamp) || f.timestamp || f.ts || '';
-    const key = state + ':' + note;
-
-    if (key === lastKey) {
-      runCount++;
-      continue;
-    }
-    // Emit the previous run's count if it was repeated
-    if (result.length > 0 && runCount > 1) {
-      result[result.length - 1].repeat = runCount;
-    }
-    result.push({ ts, state, note });
-    lastKey = key;
-    runCount = 1;
-    runStart = ts;
-  }
-  if (result.length > 0 && runCount > 1) {
-    result[result.length - 1].repeat = runCount;
-  }
-  return result;
-}
 
 // Parse XML-tagged frame string into list of {state, note} objects.
 // Input: "<orientation>toward-tension</orientation>\n<preference>resolution</preference>"
@@ -583,121 +523,6 @@ function parseXmlFrameString(str) {
     results.push({ state: m[1], note: m[2].trim() });
   }
   return results;
-}
-
-// Render notes list as HTML divs for MAP-states page body
-function renderNotesAsHtml(notes) {
-  return notes.map(n => {
-    const time = n.ts ? new Date(n.ts).toISOString().split('T')[1].slice(0, 8) : '';
-    const repeat = n.repeat ? ` _(×${n.repeat})_` : '';
-    const timeSpan = time ? `<span class="map-time">${time}</span> ` : '';
-    return `<div class="map-note map-state-${n.state}">\n${timeSpan}<span class="map-tag">${n.state}</span>${repeat}\n\n${n.note || '—'}\n</div>`;
-  }).join('\n\n');
-}
-
-function generateMapStates() {
-  const outDir = path.join(contentDir, 'map-states');
-  ensureDir(outDir);
-
-  let count = 0;
-
-  // ── Source 1: MAPH harness frames from maph_frames/empi-primary/<uuid>/ ──
-  const framesDir = path.join(evidencePath, 'maph_frames');
-  if (fs.existsSync(framesDir)) {
-    const primaryPath = path.join(framesDir, 'empi-primary');
-    if (fs.existsSync(primaryPath)) {
-      const uuidDirs = fs.readdirSync(primaryPath).filter(d => {
-        try { return fs.statSync(path.join(primaryPath, d)).isDirectory(); } catch { return false; }
-      });
-
-      for (const uuidDir of uuidDirs) {
-        const framesPath = path.join(primaryPath, uuidDir, 'frames.jsonl');
-        if (!fs.existsSync(framesPath)) continue;
-
-        const rawFrames = readJSONL(framesPath);
-        if (!rawFrames.length) continue;
-
-        const notes = dedupeFrameNotes(rawFrames);
-        if (!notes.length) continue;
-
-        const uniqueStates = new Set(notes.map(n => n.state));
-        if (notes.length < 2 && uniqueStates.size === 1) continue;
-
-        const firstTs = (rawFrames[0].frame && rawFrames[0].frame.timestamp) || rawFrames[0].timestamp || '';
-        const dateLabel = firstTs ? firstTs.split('T')[0] : uuidDir.slice(0, 8);
-
-        const fm = {
-          title: `MAP-States — Cycle — ${dateLabel}`,
-          date: firstTs || new Date().toISOString(),
-          source: 'harness',
-          session_uuid: uuidDir,
-          frame_count: rawFrames.length,
-          unique_notes: notes.length,
-          states: Array.from(uniqueStates),
-        };
-
-        const slug = slugify(`cycle-${dateLabel}-${uuidDir.slice(0, 8)}`);
-        writeFile(path.join(outDir, slug + '.md'), yamlFrontmatter(fm) + '\n\n' + renderNotesAsHtml(notes) + '\n');
-        count++;
-      }
-    }
-  }
-
-  // ── Source 2: Rich extracted_frames from practice sessions ──
-  const sessionsDir = path.join(evidencePath, 'sessions');
-  if (fs.existsSync(sessionsDir)) {
-    const pDirs = fs.readdirSync(sessionsDir).filter(d => {
-      if (!d.startsWith('P')) return false;
-      try { return fs.statSync(path.join(sessionsDir, d)).isDirectory(); } catch { return false; }
-    });
-
-    for (const sessionId of pDirs) {
-      const interactionsPath = path.join(sessionsDir, sessionId, 'interactions.jsonl');
-      if (!fs.existsSync(interactionsPath)) continue;
-
-      const meta = readJSON(path.join(sessionsDir, sessionId, 'meta.json')) || {};
-      const entries = readJSONL(interactionsPath);
-      if (!entries.length) continue;
-
-      const allNotes = [];
-      for (const entry of entries) {
-        const ts = entry.timestamp || meta.started || '';
-        const frames = entry.extracted_frames || [];
-        for (const f of frames) {
-          if (typeof f === 'string') {
-            for (const parsed of parseXmlFrameString(f)) {
-              allNotes.push({ ts, state: parsed.state, note: parsed.note });
-            }
-          } else if (f && typeof f === 'object') {
-            allNotes.push({ ts, state: f.state || f.tag || 'frame', note: f.note || f.content || f.raw || '' });
-          }
-        }
-      }
-
-      if (!allNotes.length) continue;
-
-      const uniqueStates = new Set(allNotes.map(n => n.state));
-      const firstTs = allNotes[0].ts || meta.started || '';
-      const dateLabel = firstTs ? firstTs.split('T')[0] : sessionId;
-      const sessionTitle = meta.title || sessionId;
-
-      const fm = {
-        title: `MAP-States — ${sessionTitle}`,
-        date: firstTs || new Date().toISOString(),
-        source: 'session',
-        session_id: sessionId,
-        frame_count: allNotes.length,
-        unique_notes: allNotes.length,
-        states: Array.from(uniqueStates),
-      };
-
-      const slug = slugify(`session-${dateLabel}-${sessionId.toLowerCase()}`);
-      writeFile(path.join(outDir, slug + '.md'), yamlFrontmatter(fm) + '\n\n' + renderNotesAsHtml(allNotes) + '\n');
-      count++;
-    }
-  }
-
-  return count;
 }
 
 // ---------------------------------------------------------------------------

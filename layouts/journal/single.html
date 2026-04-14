@@ -28,8 +28,11 @@
   <p class="score-explainer muted">The <em>depth score</em> is a heuristic from the reflection text — length, technical specificity, first-person self-awareness, actionable directions, and novelty flags. It's a signal, not a judgment.</p>
   {{ end }}
 
-  <div class="content">
-    {{ .Content }}
+  <div class="reflection-body{{ if .Params.map_states }} has-timeline{{ end }}">
+    <div class="content">
+      {{ .Content }}
+    </div>
+    {{ partial "map-states-timeline.html" .Params }}
   </div>
 
   {{ if .Params.contradictions }}
@@ -111,8 +114,11 @@
   {{ if .Content }}
   <section class="journal-section">
     <h2>{{ if eq .Params.session_class "creative" }}Session Notes{{ else }}Practice Journal{{ end }}</h2>
-    <div class="content journal-body">
-      {{ .Content }}
+    <div class="reflection-body{{ if .Params.map_states }} has-timeline{{ end }}">
+      <div class="content journal-body">
+        {{ .Content }}
+      </div>
+      {{ partial "map-states-timeline.html" .Params }}
     </div>
   </section>
   {{ end }}

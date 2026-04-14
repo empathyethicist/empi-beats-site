@@ -1,0 +1,16 @@
+{{/* Vertical MAP-States timeline showing the cognitive frames that produced a reflection.
+     Expects: .map_states — array of {state, note} objects */}}
+{{ if .map_states }}
+<aside class="map-timeline">
+  <h3>MAP-States</h3>
+  <p class="muted timeline-explainer">The cognitive frames EMPI emitted during this session — the raw observations that produced the reflection.</p>
+  <ol class="timeline-nodes">
+    {{ range .map_states }}
+    <li class="timeline-node state-{{ .state }}">
+      <span class="timeline-tag">{{ .state }}</span>
+      <span class="timeline-note">{{ .note }}</span>
+    </li>
+    {{ end }}
+  </ol>
+</aside>
+{{ end }}
