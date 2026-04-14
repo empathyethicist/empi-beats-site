@@ -4,7 +4,24 @@
 <title>{{ if .IsHome }}{{ .Site.Title }}{{ else }}{{ .Title }} — {{ .Site.Title }}{{ end }}</title>
 <meta name="description" content="{{ with .Params.description }}{{ . }}{{ else }}{{ .Site.Params.description }}{{ end }}">
 <link rel="icon" href="/img/empi-32.png" type="image/png">
+
+{{/* OpenGraph */}}
+<meta property="og:title" content="{{ if .IsHome }}{{ .Site.Title }}{{ else }}{{ .Title }}{{ end }}">
+<meta property="og:description" content="{{ with .Params.intent }}{{ . }}{{ else }}{{ with .Params.description }}{{ . }}{{ else }}{{ .Site.Params.description }}{{ end }}{{ end }}">
+<meta property="og:type" content="{{ if .IsPage }}article{{ else }}website{{ end }}">
+<meta property="og:url" content="{{ .Permalink }}">
+<meta property="og:site_name" content="{{ .Site.Title }}">
+{{ with .Params.image }}<meta property="og:image" content="{{ . | absURL }}">
+{{ else }}<meta property="og:image" content="{{ "/img/empi-hero.png" | absURL }}">
+{{ end }}
+{{/* Twitter Card */}}
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="{{ if .IsHome }}{{ .Site.Title }}{{ else }}{{ .Title }}{{ end }}">
+<meta name="twitter:description" content="{{ with .Params.intent }}{{ . }}{{ else }}{{ with .Params.description }}{{ . }}{{ else }}{{ .Site.Params.description }}{{ end }}{{ end }}">
+{{ with .Params.image }}<meta name="twitter:image" content="{{ . | absURL }}">{{ end }}
+
 <link rel="stylesheet" href="/css/style.css">
 {{ if .Params.hasRadar }}<script src="/js/radar-chart.js" defer></script>{{ end }}
 {{ if .Params.hasSwimlane }}<script src="/js/swimlane.js" defer></script>{{ end }}
 <link rel="alternate" type="application/rss+xml" title="{{ .Site.Title }}" href="/index.xml">
+<link rel="alternate" type="application/rss+xml" title="{{ .Site.Title }} — Music" href="/music/index.xml">

@@ -19,7 +19,7 @@ title = "EMPI Beats — AI Beatmaker"
 
 [outputs]
   home = ["HTML", "RSS"]
-  section = ["HTML"]
+  section = ["HTML", "RSS"]
   page = ["HTML"]
 
 [menus]

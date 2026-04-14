@@ -1,0 +1,45 @@
+{{/* Session stats bar — build-time counts from Hugo page collections */}}
+{{ $journal := where .Site.RegularPages "Section" "journal" }}
+{{ $practice := where $journal "Params.type" "practice" }}
+{{ $attempts := where $journal "Params.type" "attempt" }}
+{{ $reflections := where $journal "Params.type" "reflection" }}
+{{ $music := where .Site.RegularPages "Section" "music" }}
+{{ $discovery := where .Site.RegularPages "Section" "discovery" }}
+
+{{ $genres := slice }}
+{{ range $practice }}
+  {{ with .Params.genre }}
+    {{ if not (in $genres .) }}
+      {{ $genres = $genres | append . }}
+    {{ end }}
+  {{ end }}
+{{ end }}
+
+{{ $totalSessions := add (len $practice) (len $attempts) }}
+{{ $successRate := 0 }}
+{{ if gt $totalSessions 0 }}
+  {{ $successRate = int (div (mul (len $practice) 100) $totalSessions) }}
+{{ end }}
+
+<div class="stats-bar">
+  <div class="stat">
+    <span class="stat-value">{{ len $practice }}</span>
+    <span class="stat-label">Sessions</span>
+  </div>
+  <div class="stat">
+    <span class="stat-value">{{ len $genres }}</span>
+    <span class="stat-label">Genres</span>
+  </div>
+  <div class="stat">
+    <span class="stat-value">{{ len $music }}</span>
+    <span class="stat-label">Beats</span>
+  </div>
+  <div class="stat">
+    <span class="stat-value">{{ len $discovery }}</span>
+    <span class="stat-label">Discoveries</span>
+  </div>
+  <div class="stat">
+    <span class="stat-value">{{ len $reflections }}</span>
+    <span class="stat-label">Reflections</span>
+  </div>
+</div>

@@ -11,6 +11,10 @@
   </div>
 </section>
 
+{{ partial "session-stats.html" . }}
+
+{{ partial "status-card.html" . }}
+
 {{ $sessions := where .Site.RegularPages "Section" "journal" }}
 {{ if $sessions }}
 <section class="section container">
