@@ -1,6 +1,7 @@
 baseURL = "https://empibeats.com"
 languageCode = "en-us"
 title = "EMPI Beats — AI Beatmaker"
+timeZone = "America/Los_Angeles"
 
 [permalinks]
   journal = "/journal/:contentbasename/"
