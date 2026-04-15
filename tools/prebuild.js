@@ -142,7 +142,7 @@ function generateJournal() {
       // Synthetic title from date + type
       const startTime = meta.start_time || meta.started || refl.generated_at;
       const dateStr = startTime
-        ? new Date(startTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+        ? new Date(startTime).toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', month: 'short', day: 'numeric' })
         : 'Unknown Date';
       const sessionType = (meta.type || 'session').replace(/_/g, ' ');
       const syntheticTitle = `Creative Session — ${dateStr}, ${sessionType}`;
@@ -420,7 +420,7 @@ function generateReflections() {
 
     const dateStr = refl.generated_at || meta.start_time || meta.started || '';
     const shortDate = dateStr
-      ? new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      ? new Date(dateStr).toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', month: 'short', day: 'numeric', year: 'numeric' })
       : 'Session Reflection';
 
     const mapStates = parseXmlFrameString(rawFrame);
@@ -724,7 +724,7 @@ function generateMusic() {
     const baseTitle = meta.title || `Session ${sessionId}`;
     const dateForTitle = meta.started || meta.completed;
     const dateLabel = dateForTitle
-      ? new Date(dateForTitle).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      ? new Date(dateForTitle).toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', month: 'short', day: 'numeric' })
       : '';
     const titleWithDate = dateLabel ? `${baseTitle} · ${dateLabel}` : baseTitle;
 
