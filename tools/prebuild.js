@@ -782,7 +782,7 @@ function generateStatus() {
       const updatedMatch = thoughts.match(/\*Last updated:\s*(.+?)\*/);
       if (updatedMatch) {
         const raw = updatedMatch[1].trim();
-        const parsed = new Date(raw + ' UTC');
+        const parsed = new Date(raw.replace(/\s+at\s+/, ' ') + ' UTC');
         if (!isNaN(parsed.getTime())) {
           const tz = 'America/Los_Angeles';
           const datePart = parsed.toLocaleDateString('en-US', {
