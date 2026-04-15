@@ -10,7 +10,7 @@
       {{ else }}
       <span class="badge badge-cross-reflection">Cross-Session</span>
       {{ end }}
-      <time>{{ .Date.Format "January 2, 2006" }}</time>
+      <time>{{ dateFormat "January 2, 2006" (time.In "America/Los_Angeles" .Date) }}</time>
       {{ if .Params.quality_score }}
       <span class="badge badge-score" title="Heuristic score 0–1: length + specificity + self-awareness + actionability">Depth: {{ .Params.quality_score }}</span>
       {{ end }}
@@ -62,7 +62,7 @@
     <div class="session-meta">
       <span class="badge badge-attempt">Attempt</span>
       {{ if .Params.genre }}<span class="badge genre-{{ .Params.genre }}">{{ .Params.genre }}</span>{{ end }}
-      <time>{{ .Date.Format "January 2, 2006" }}</time>
+      <time>{{ dateFormat "January 2, 2006" (time.In "America/Los_Angeles" .Date) }}</time>
       {{ if .Params.duration }}<span class="muted">&middot; {{ .Params.duration }}s</span>{{ end }}
     </div>
   </header>
@@ -97,7 +97,7 @@
       {{ if .Params.genre }}<span class="badge genre-{{ .Params.genre }}">{{ .Params.genre }}</span>{{ end }}
       {{ if .Params.curriculum_stage }}<span class="badge badge-stage">{{ .Params.curriculum_stage }}</span>{{ end }}
       {{ if .Params.render_status }}<span class="badge badge-status-{{ .Params.render_status }}">{{ .Params.render_status }}</span>{{ end }}
-      <time>{{ .Date.Format "January 2, 2006" }}</time>
+      <time>{{ dateFormat "January 2, 2006" (time.In "America/Los_Angeles" .Date) }}</time>
       {{ if .Params.duration }}<span class="muted">&middot; {{ .Params.duration }}s</span>{{ end }}
       {{ if .Params.cycles }}<span class="muted">&middot; {{ .Params.cycles }} cycles</span>{{ end }}
     </div>

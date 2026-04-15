@@ -25,7 +25,7 @@
     <div class="card-meta">
       {{ if .Params.genre }}<span class="badge genre-{{ .Params.genre }}">{{ .Params.genre }}</span>{{ end }}
       {{ if .Params.curriculum_stage }}<span class="badge badge-stage">{{ .Params.curriculum_stage }}</span>{{ end }}
-      <time>{{ .Date.Format "January 2, 2006" }}</time>
+      <time>{{ dateFormat "January 2, 2006" (time.In "America/Los_Angeles" .Date) }}</time>
     </div>
     {{ if .Params.intent }}<blockquote class="intent">{{ .Params.intent }}</blockquote>{{ end }}
     {{ .Summary }}
@@ -40,7 +40,7 @@
     <li>
       <a href="{{ .RelPermalink }}">{{ .Title }}</a>
       {{ if .Params.genre }}<span class="badge genre-{{ .Params.genre }}">{{ .Params.genre }}</span>{{ end }}
-      <time>{{ .Date.Format "Jan 2" }}</time>
+      <time>{{ dateFormat "Jan 2" (time.In "America/Los_Angeles" .Date) }}</time>
     </li>
   {{ end }}
   </ul>

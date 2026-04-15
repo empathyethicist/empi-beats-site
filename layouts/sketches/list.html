@@ -13,7 +13,7 @@
         <div class="sketch-thumb sketch-thumb-placeholder"></div>
         {{ end }}
         <h3>{{ .Title }}</h3>
-        <time>{{ .Date.Format "Jan 2, 2006" }}</time>
+        <time>{{ dateFormat "Jan 2, 2006" (time.In "America/Los_Angeles" .Date) }}</time>
       </a>
       {{ with .Params.session_id }}
       <a href="/journal/{{ . | urlize }}/" class="parent-link-small">reflection &rarr;</a>

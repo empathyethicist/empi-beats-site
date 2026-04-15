@@ -3,7 +3,7 @@
   <header>
     <h1>{{ .Title }}</h1>
     <div class="session-meta">
-      <time>{{ .Date.Format "January 2, 2006" }}</time>
+      <time>{{ dateFormat "January 2, 2006" (time.In "America/Los_Angeles" .Date) }}</time>
       {{ if .Params.hops }}<span class="muted">&middot; {{ .Params.hops }} hops</span>{{ end }}
       {{ if .Params.tracks_listened }}<span class="muted">&middot; {{ .Params.tracks_listened }} tracks</span>{{ end }}
       {{/* termination reason removed 2026-04-11 — "budget_exhausted" is

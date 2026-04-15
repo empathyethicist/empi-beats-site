@@ -2,7 +2,7 @@
 <article class="single sketch-detail container">
   <header>
     <h1>{{ .Title }}</h1>
-    <time>{{ .Date.Format "January 2, 2006" }}</time>
+    <time>{{ dateFormat "January 2, 2006" (time.In "America/Los_Angeles" .Date) }}</time>
   </header>
 
   {{ if .Params.image }}

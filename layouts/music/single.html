@@ -4,7 +4,7 @@
     <h1>{{ .Title }}</h1>
     <div class="music-meta">
       {{ if .Params.domain }}<span class="badge">{{ .Params.domain }}</span>{{ end }}
-      <time>{{ .Date.Format "January 2, 2006" }}</time>
+      <time>{{ dateFormat "January 2, 2006" (time.In "America/Los_Angeles" .Date) }}</time>
       {{ if .Params.duration }}<span class="muted">&middot; {{ .Params.duration }}s</span>{{ end }}
     </div>
   </header>

@@ -780,7 +780,22 @@ function generateStatus() {
     if (thoughts.trim()) {
       status.has_data = true;
       const updatedMatch = thoughts.match(/\*Last updated:\s*(.+?)\*/);
-      if (updatedMatch) status.updated = updatedMatch[1].trim();
+      if (updatedMatch) {
+        const raw = updatedMatch[1].trim();
+        const parsed = new Date(raw + ' UTC');
+        if (!isNaN(parsed.getTime())) {
+          const tz = 'America/Los_Angeles';
+          const datePart = parsed.toLocaleDateString('en-US', {
+            timeZone: tz, weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+          });
+          const timePart = parsed.toLocaleTimeString('en-US', {
+            timeZone: tz, hour: 'numeric', minute: '2-digit', hour12: true,
+          });
+          status.updated = `${datePart} at ${timePart}`;
+        } else {
+          status.updated = raw;
+        }
+      }
 
       const currentMatch = thoughts.match(/## Current State\n([\s\S]*?)(?=\n## |\n*$)/);
       if (currentMatch) {

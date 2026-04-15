@@ -10,7 +10,7 @@
       <div class="card-meta">
         {{ if .Params.genre }}<span class="badge genre-{{ .Params.genre }}">{{ .Params.genre }}</span>{{ end }}
         {{ if .Params.quality_score }}<span class="badge badge-score">{{ .Params.quality_score }}</span>{{ end }}
-        <time>{{ .Date.Format "Jan 2, 2006" }}</time>
+        <time>{{ dateFormat "Jan 2, 2006" (time.In "America/Los_Angeles" .Date) }}</time>
       </div>
       {{ if .Params.audio }}
       {{ partial "audio-player.html" (dict "src" .Params.audio "title" .Title) }}

@@ -6,7 +6,7 @@
   <article class="card">
     <h2><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
     {{ if .Params.genre }}<span class="badge genre-{{ .Params.genre }}">{{ .Params.genre }}</span>{{ end }}
-    <time>{{ .Date.Format "January 2, 2006" }}</time>
+    <time>{{ dateFormat "January 2, 2006" (time.In "America/Los_Angeles" .Date) }}</time>
     {{ .Summary }}
   </article>
   {{ end }}
