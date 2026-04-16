@@ -68,6 +68,31 @@ function slugify(str) {
   return String(str).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
+function summarizeCompositionPhase(meta) {
+  const phase = meta && meta.composition_phase_summary;
+  if (!phase || typeof phase !== 'object') return null;
+  return {
+    genre: phase.genre || null,
+    template: phase.template_id || null,
+    mode: phase.mode || null,
+    status: phase.execution_status || null,
+    prompt: phase.prompt_context || null,
+  };
+}
+
+function buildCompositionSection(summary) {
+  if (!summary) return '';
+  return [
+    '## Studio Composition Phase',
+    '',
+    `- Genre: ${summary.genre || 'unknown'}`,
+    `- Template: ${summary.template || 'unknown'}`,
+    `- Mode: ${summary.mode || 'unknown'}`,
+    `- Status: ${summary.status || 'unknown'}`,
+    `- Prompt: ${summary.prompt || 'none'}`,
+  ].join('\n');
+}
+
 function writeFile(filepath, content) {
   if (dryRun) {
     console.log('[DRY RUN] Would write:', path.basename(filepath));
@@ -131,6 +156,7 @@ function generateJournal() {
     // ── Creative Studio session (UUID-named) ──────────────────────────────
     if (isCreativeStudio) {
       const refl = readJSON(path.join(sessionPath, 'reflection.json')) || {};
+      const composition = summarizeCompositionPhase(meta);
       const fiveThings = refl.five_things || {};
       const scores = Object.values(fiveThings);
       const allZero = scores.length > 0 && scores.every(v => v === 0 || v === null || v === undefined);
@@ -154,10 +180,12 @@ function generateJournal() {
       const rationale = refl.five_things_rationale || '';
       let summaryMd = '';
       try { summaryMd = fs.readFileSync(path.join(sessionPath, 'summary.md'), 'utf8'); } catch (_) {}
+      const summaryHasCompositionSection = /(^|\n)##\s+Studio Composition Phase\b/i.test(summaryMd);
 
       const bodyParts = [];
       if (mapStatesFrame) bodyParts.push('## Reflection\n\n' + mapStatesFrame);
       if (rationale) bodyParts.push('## Five Things\n\n' + rationale);
+      if (composition && !summaryHasCompositionSection) bodyParts.push(buildCompositionSection(composition));
       if (summaryMd) bodyParts.push('## Summary\n\n' + summaryMd);
       const body = bodyParts.join('\n\n');
 
@@ -171,6 +199,13 @@ function generateJournal() {
         session_class: 'creative',
       };
       if (mapStates.length > 0) fm.map_states = mapStates;
+      if (composition) {
+        if (composition.genre) fm.composition_genre = composition.genre;
+        if (composition.template) fm.composition_template = composition.template;
+        if (composition.mode) fm.composition_mode = composition.mode;
+        if (composition.status) fm.composition_status = composition.status;
+        if (composition.prompt) fm.composition_prompt = composition.prompt;
+      }
 
       writeFile(path.join(outDir, slugify(dir) + '.md'), yamlFrontmatter(fm) + '\n\n' + body + '\n');
       count++;
@@ -180,6 +215,7 @@ function generateJournal() {
     // ── NRT Practice session (P*-named) ───────────────────────────────────
     const id = meta.session_id || dir;
     const decision = meta.decision || {};
+    const composition = summarizeCompositionPhase(meta);
 
     const isAttempt = meta.render_ok === false;
 
@@ -228,8 +264,20 @@ function generateJournal() {
     if (audio) fm.audio = audio;
     if (meta.completed) fm.completed = meta.completed;
     if (meta.intent_stack) fm.intent_stack = meta.intent_stack;
+    if (composition) {
+      if (composition.genre) fm.composition_genre = composition.genre;
+      if (composition.template) fm.composition_template = composition.template;
+      if (composition.mode) fm.composition_mode = composition.mode;
+      if (composition.status) fm.composition_status = composition.status;
+      if (composition.prompt) fm.composition_prompt = composition.prompt;
+    }
 
-    writeFile(path.join(outDir, slugify(id) + '.md'), yamlFrontmatter(fm) + '\n\n' + (journal || '') + '\n');
+    const practiceBodyParts = [];
+    if (composition) practiceBodyParts.push(buildCompositionSection(composition));
+    if (journal) practiceBodyParts.push(journal);
+    const practiceBody = practiceBodyParts.join('\n\n');
+
+    writeFile(path.join(outDir, slugify(id) + '.md'), yamlFrontmatter(fm) + '\n\n' + (practiceBody || '') + '\n');
     count++;
   }
 

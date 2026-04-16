@@ -95,6 +95,9 @@
     <div class="session-meta">
       {{ if eq .Params.session_class "creative" }}<span class="badge badge-creative">Creative Studio</span>{{ end }}
       {{ if .Params.genre }}<span class="badge genre-{{ .Params.genre }}">{{ .Params.genre }}</span>{{ end }}
+      {{ if .Params.composition_template }}<span class="badge badge-stage">Template: {{ .Params.composition_template }}</span>{{ end }}
+      {{ if .Params.composition_mode }}<span class="badge badge-stage">Mode: {{ .Params.composition_mode }}</span>{{ end }}
+      {{ if .Params.composition_status }}<span class="badge badge-status-{{ if eq .Params.composition_status "executed" }}success{{ else if eq .Params.composition_status "execution_error" }}failed{{ else }}attempt{{ end }}">{{ .Params.composition_status }}</span>{{ end }}
       {{ if .Params.curriculum_stage }}<span class="badge badge-stage">{{ .Params.curriculum_stage }}</span>{{ end }}
       {{ if .Params.render_status }}<span class="badge badge-status-{{ .Params.render_status }}">{{ .Params.render_status }}</span>{{ end }}
       <time>{{ dateFormat "January 2, 2006" (time.In "America/Los_Angeles" .Date) }}</time>
@@ -102,6 +105,19 @@
       {{ if .Params.cycles }}<span class="muted">&middot; {{ .Params.cycles }} cycles</span>{{ end }}
     </div>
   </header>
+
+  {{ if or .Params.composition_template .Params.composition_mode .Params.composition_prompt }}
+  <section class="intent-block">
+    <h2>Studio Composition</h2>
+    <p class="rationale">
+      {{ if .Params.composition_genre }}Genre: {{ .Params.composition_genre }}{{ else }}Genre: unknown{{ end }}
+      {{ if .Params.composition_template }} &middot; Template: {{ .Params.composition_template }}{{ end }}
+      {{ if .Params.composition_mode }} &middot; Mode: {{ .Params.composition_mode }}{{ end }}
+      {{ if .Params.composition_status }} &middot; Status: {{ .Params.composition_status }}{{ end }}
+    </p>
+    {{ if .Params.composition_prompt }}<p class="rationale">{{ .Params.composition_prompt }}</p>{{ end }}
+  </section>
+  {{ end }}
 
   {{ if .Params.intent }}
   <section class="intent-block">
