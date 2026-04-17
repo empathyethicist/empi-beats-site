@@ -16,6 +16,13 @@
       </div>
     </div>
     {{ if .Params.creative_direction }}<blockquote class="intent">{{ .Params.creative_direction }}</blockquote>{{ end }}
+    {{ if .Params.audio }}
+    <p class="link-journal">
+      <a href="{{ .RelPermalink }}">Open test page</a>
+      &middot;
+      <a href="{{ .Params.audio }}">Open MP3</a>
+    </p>
+    {{ end }}
   </article>
   {{ end }}
   {{ template "_internal/pagination.html" . }}

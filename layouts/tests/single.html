@@ -16,6 +16,7 @@
   <section class="audio-section">
     <h2>Audio</h2>
     {{ partial "audio-player.html" (dict "src" .Params.audio "title" (.Params.test_label | default .Title)) }}
+    <p class="link-journal"><a href="{{ .Params.audio }}">Open MP3 directly</a></p>
   </section>
   {{ end }}
 
