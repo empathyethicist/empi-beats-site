@@ -3,7 +3,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { execFileSync } = require('child_process');
+const { execFileSync, spawnSync } = require('child_process');
 
 const sessionId = process.argv[2];
 const evidencePath = process.argv[3] || '/opt/empi/evidence';
@@ -117,18 +117,17 @@ function buildHumanTestLabel(meta, fallbackId) {
 
 function getWavMeanDb(wavPath) {
   try {
-    const result = execFileSync('ffmpeg', [
+    const result = spawnSync('ffmpeg', [
       '-i', wavPath,
       '-af', 'volumedetect',
       '-f', 'null',
       '-',
-    ], { timeout: 30000, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
-    const meanMatch = String(result || '').match(/mean_volume:\s*(-?[\d.]+)\s*dB/);
-    return meanMatch ? parseFloat(meanMatch[1]) : -Infinity;
-  } catch (e) {
-    const output = `${e.stdout || ''}${e.stderr || ''}`;
+    ], { timeout: 30000, encoding: 'utf8' });
+    const output = `${result.stdout || ''}${result.stderr || ''}`;
     const meanMatch = output.match(/mean_volume:\s*(-?[\d.]+)\s*dB/);
     return meanMatch ? parseFloat(meanMatch[1]) : -Infinity;
+  } catch (_) {
+    return -Infinity;
   }
 }
 
