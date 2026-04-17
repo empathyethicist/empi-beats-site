@@ -131,7 +131,17 @@ function getWavMeanDb(wavPath) {
   }
 }
 
-function pickCanonicalWav(sessionDir) {
+function pickCanonicalWav(sessionDir, meta) {
+  const preferred = [
+    meta && meta.audio_file,
+    meta && meta.wav_filename ? path.join(sessionDir, meta.wav_filename) : null,
+    path.join(sessionDir, 'practice.wav'),
+  ].filter(Boolean);
+
+  for (const candidate of preferred) {
+    if (fs.existsSync(candidate)) return candidate;
+  }
+
   const candidates = [];
   let root = [];
   try { root = fs.readdirSync(sessionDir); } catch (_) {}
@@ -398,7 +408,7 @@ function main() {
     console.error(`${sessionId} did not render successfully`);
     process.exit(1);
   }
-  const wavPath = pickCanonicalWav(sessionPath);
+  const wavPath = pickCanonicalWav(sessionPath, meta);
   if (!wavPath) {
     console.error(`No canonical WAV found for ${sessionId}`);
     process.exit(1);
