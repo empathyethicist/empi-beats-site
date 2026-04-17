@@ -109,6 +109,26 @@ function copyFile(src, dest) {
   fs.copyFileSync(src, dest);
 }
 
+function sweepFailedAttemptEntries(outDir) {
+  if (!fs.existsSync(outDir)) return 0;
+  let removed = 0;
+  const files = fs.readdirSync(outDir).filter(f => f.endsWith('.md'));
+  for (const file of files) {
+    const filePath = path.join(outDir, file);
+    let body = '';
+    try { body = fs.readFileSync(filePath, 'utf8'); } catch (_) { continue; }
+    if (/^type:\s*attempt\b/m.test(body) || /^render_status:\s*failed\b/m.test(body)) {
+      if (dryRun) {
+        console.log('[DRY RUN] Would remove failed attempt entry:', file);
+      } else {
+        try { fs.unlinkSync(filePath); } catch (_) { continue; }
+      }
+      removed++;
+    }
+  }
+  return removed;
+}
+
 // ---------------------------------------------------------------------------
 // 1. Journal — Practice (P*) + Creative Studio (UUID) sessions
 // ---------------------------------------------------------------------------
@@ -122,6 +142,10 @@ function generateJournal() {
 
   const outDir = path.join(contentDir, 'journal');
   ensureDir(outDir);
+  const sweptFailedAttempts = sweepFailedAttemptEntries(outDir);
+  if (sweptFailedAttempts > 0) {
+    console.log(`  Swept ${sweptFailedAttempts} failed attempt journal entr${sweptFailedAttempts === 1 ? 'y' : 'ies'}`);
+  }
 
   let count = 0;
   const dirs = fs.readdirSync(sessionsDir).filter(d => {
@@ -218,6 +242,7 @@ function generateJournal() {
     const composition = summarizeCompositionPhase(meta);
 
     const isAttempt = meta.render_ok === false;
+    if (isAttempt) continue;
 
     // Extract journal/prose from interactions
     const interactions = readJSONL(path.join(sessionPath, 'interactions.jsonl'));
@@ -249,7 +274,7 @@ function generateJournal() {
     const fm = {
       title: meta.title || `Session ${id}`,
       date: meta.started || meta.timestamp || new Date().toISOString(),
-      type: isAttempt ? 'attempt' : (meta.type || ''),
+      type: meta.type || '',
       domain: meta.domain || '',
       genre: meta.genre || meta.domain || '',
       duration: decision.duration || meta.duration || '',
@@ -257,7 +282,7 @@ function generateJournal() {
       rationale: decision.rationale || '',
       session_id: id,
       session_class: 'practice',
-      render_status: isAttempt ? 'failed' : 'success',
+      render_status: 'success',
     };
 
     if (fingerprint) { fm.fingerprint = fingerprint; fm.hasRadar = true; }
