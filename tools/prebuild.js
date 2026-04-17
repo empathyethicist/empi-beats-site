@@ -383,7 +383,8 @@ function generateTests() {
 
     const composition = getPracticeComposition(meta);
     const componentIds = collectTestComponentIds(meta);
-    const label = buildHumanTestLabel(meta, sessionId);
+    const brief = buildHumanTestLabel(meta, sessionId);
+    const titleLabel = meta.title || brief;
     const interactions = readJSONL(path.join(sessionPath, 'interactions.jsonl'));
     const journal = interactions
       .map(i => i.prose || i.full_response || '')
@@ -391,14 +392,15 @@ function generateTests() {
       .join('\n\n');
 
     const fm = {
-      title: `QA Test — ${label}`,
+      title: `QA Test — ${titleLabel}`,
       description: 'Hidden QA listening page for EMPI render probe verification.',
       date: meta.started || meta.completed || new Date().toISOString(),
       session_id: sessionId,
       genre: (composition && composition.genre) || meta.genre || meta.domain || '',
       audio: '/audio/tests/' + mp3Name,
       render_status: 'success',
-      test_label: label,
+      test_label: titleLabel,
+      test_brief: brief,
       creative_direction: (composition && composition.creative_direction) || null,
       composition_template: (composition && composition.template_id) || null,
       test_components: componentIds,
@@ -409,7 +411,7 @@ function generateTests() {
     const bodyParts = [
       '## What This Test Is',
       '',
-      label,
+      brief,
     ];
 
     if (composition && composition.creative_direction) {

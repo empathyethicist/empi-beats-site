@@ -208,7 +208,7 @@ function buildTestBody(meta, componentIds, label, journal) {
   return bodyParts.join('\n');
 }
 
-function buildTestPageHtml({ meta, label, audioPath, componentIds, journal, sessionSlug }) {
+function buildTestPageHtml({ meta, label, brief, audioPath, componentIds, journal, sessionSlug }) {
   const composition = getPracticeComposition(meta);
   const creativeDirection = (composition && composition.creative_direction) || '';
   const date = new Date(meta.started || meta.completed || Date.now()).toLocaleDateString('en-US', {
@@ -243,6 +243,7 @@ function buildTestPageHtml({ meta, label, audioPath, componentIds, journal, sess
         </div>
       </header>
       <p class="link-journal"><a href="/tests/">← Back to all listening tests</a></p>
+      ${brief && brief !== label ? `<p class="link-journal"><strong>Test brief:</strong> ${escapeHtml(brief)}</p>` : ''}
       <section class="audio-section">
         <h2>Audio</h2>
         <div class="audio-player">
@@ -267,6 +268,9 @@ function buildTestPageHtml({ meta, label, audioPath, componentIds, journal, sess
 function buildTestsIndexHtml(entries) {
   const cards = entries.map((entry) => {
     const direction = entry.creative_direction ? `<blockquote class="intent">${escapeHtml(entry.creative_direction)}</blockquote>` : '';
+    const brief = entry.brief && entry.brief !== entry.label
+      ? `<p><strong>Test brief:</strong> ${escapeHtml(entry.brief)}</p>`
+      : '';
     return `<article class="card session-practice">
   <div class="card-header">
     <h2><a href="/tests/${entry.slug}/">${escapeHtml(entry.label)}</a></h2>
@@ -276,6 +280,7 @@ function buildTestsIndexHtml(entries) {
       <time>${escapeHtml(entry.date)}</time>
     </div>
   </div>
+  ${brief}
   ${direction}
   <p class="link-journal"><a href="/tests/${entry.slug}/">Open test page</a></p>
 </article>`;
@@ -310,7 +315,8 @@ function writeFastTestPage(sessionMeta) {
   ensureDir(pageDir);
   const composition = getPracticeComposition(sessionMeta);
   const componentIds = collectTestComponentIds(sessionMeta);
-  const label = buildHumanTestLabel(sessionMeta, sessionMeta.session_id);
+  const brief = buildHumanTestLabel(sessionMeta, sessionMeta.session_id);
+  const label = sessionMeta.title || brief;
   const interactions = readJSONL(path.join(evidencePath, 'sessions', sessionMeta.session_id, 'interactions.jsonl'));
   const journal = interactions
     .map((i) => i.prose || i.full_response || '')
@@ -320,6 +326,7 @@ function writeFastTestPage(sessionMeta) {
   const html = buildTestPageHtml({
     meta: sessionMeta,
     label,
+    brief,
     audioPath: audioRel,
     componentIds,
     journal,
@@ -328,7 +335,7 @@ function writeFastTestPage(sessionMeta) {
   fs.writeFileSync(path.join(pageDir, 'index.html'), html, 'utf8');
 
   ensureDir(testsContentDir);
-  const body = buildTestBody(sessionMeta, componentIds, label, journal);
+  const body = buildTestBody(sessionMeta, componentIds, brief, journal);
   const fm = {
     title: `QA Test — ${label}`,
     description: 'Hidden QA listening page for EMPI render probe verification.',
@@ -338,6 +345,7 @@ function writeFastTestPage(sessionMeta) {
     audio: audioRel,
     render_status: 'success',
     test_label: label,
+    test_brief: brief,
     creative_direction: (composition && composition.creative_direction) || null,
     composition_template: (composition && composition.template_id) || null,
     test_components: componentIds,
@@ -349,6 +357,7 @@ function writeFastTestPage(sessionMeta) {
   return {
     slug: sessionSlug,
     label,
+    brief,
     genre: (composition && composition.genre) || sessionMeta.genre || '',
     template: (composition && composition.template_id) || null,
     creative_direction: (composition && composition.creative_direction) || '',
@@ -376,7 +385,8 @@ function gatherAllQaEntries() {
     const composition = getPracticeComposition(meta);
     entries.push({
       slug: slugify(meta.session_id || dir),
-      label: buildHumanTestLabel(meta, meta.session_id || dir),
+      label: meta.title || buildHumanTestLabel(meta, meta.session_id || dir),
+      brief: buildHumanTestLabel(meta, meta.session_id || dir),
       genre: (composition && composition.genre) || meta.genre || '',
       template: (composition && composition.template_id) || null,
       creative_direction: (composition && composition.creative_direction) || '',
