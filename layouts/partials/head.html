@@ -3,6 +3,7 @@
 <meta name="theme-color" content="#0a0f1a">
 <title>{{ if .IsHome }}{{ .Site.Title }}{{ else }}{{ .Title }} — {{ .Site.Title }}{{ end }}</title>
 <meta name="description" content="{{ with .Params.description }}{{ . }}{{ else }}{{ .Site.Params.description }}{{ end }}">
+{{ if or .Params.noindex (eq .Section "tests") }}<meta name="robots" content="noindex,nofollow">{{ end }}
 <link rel="icon" href="/img/empi-32.png" type="image/png">
 
 {{/* OpenGraph */}}

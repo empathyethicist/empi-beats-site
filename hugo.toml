@@ -5,6 +5,7 @@ timeZone = "America/Los_Angeles"
 
 [permalinks]
   journal = "/journal/:contentbasename/"
+  tests = "/tests/:contentbasename/"
   discovery = "/discovery/:contentbasename/"
   sketches = "/sketches/:contentbasename/"
   music = "/music/:contentbasename/"

@@ -93,6 +93,45 @@ function buildCompositionSection(summary) {
   ].join('\n');
 }
 
+function getPracticeComposition(meta) {
+  return (meta && meta.studio_composition)
+    || (meta && meta.composition_phase_result && meta.composition_phase_result.composition)
+    || null;
+}
+
+function isQaProbe(meta) {
+  const composition = getPracticeComposition(meta);
+  return !!(composition && composition.motivation === 'qa_probe');
+}
+
+function collectTestComponentIds(meta) {
+  const ids = new Set();
+  const request = meta && meta.realization_request;
+  const spec = request && request.realization_spec;
+  const componentIds = spec && Array.isArray(spec.component_ids) ? spec.component_ids : [];
+  componentIds.forEach(id => {
+    if (id) ids.add(String(id));
+  });
+  return Array.from(ids);
+}
+
+function buildHumanTestLabel(meta, fallbackId) {
+  const composition = getPracticeComposition(meta);
+  const raw = (composition && composition.creative_direction) || meta.creative_direction || meta.title || fallbackId;
+  let cleaned = String(raw || '')
+    .replace(/^compose\s+(a\s+)?deterministic\s+/i, '')
+    .replace(/^compose\s+/i, '')
+    .replace(/\.\s*keep it nrt-safe.*$/i, '')
+    .replace(/\.\s*with no .*$/i, '')
+    .replace(/\.\s*no buffer playback.*$/i, '')
+    .replace(/\.\s*fully nrt-safe.*$/i, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/[.]+$/, '');
+  if (!cleaned) cleaned = fallbackId;
+  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+}
+
 function writeFile(filepath, content) {
   if (dryRun) {
     console.log('[DRY RUN] Would write:', path.basename(filepath));
@@ -170,6 +209,7 @@ function generateJournal() {
     // (venue inbox is the surface for Slack-driven interactions, not the
     // public journal).
     if (dir.toLowerCase().startsWith('slack-') || dir.toLowerCase().startsWith('slack_')) continue;
+    if (isQaProbe(meta)) continue;
 
     // Detect session type by schema
     const hasInteractions = fs.existsSync(path.join(sessionPath, 'interactions.jsonl'));
@@ -303,6 +343,86 @@ function generateJournal() {
     const practiceBody = practiceBodyParts.join('\n\n');
 
     writeFile(path.join(outDir, slugify(id) + '.md'), yamlFrontmatter(fm) + '\n\n' + (practiceBody || '') + '\n');
+    count++;
+  }
+
+  return count;
+}
+
+// ---------------------------------------------------------------------------
+// 1a. Tests — QA probe sessions (hidden from main site navigation)
+// ---------------------------------------------------------------------------
+
+function generateTests() {
+  const sessionsDir = path.join(evidencePath, 'sessions');
+  if (!fs.existsSync(sessionsDir)) return 0;
+
+  const outDir = path.join(contentDir, 'tests');
+  const audioDir = path.join(__dirname, '..', 'static', 'audio', 'tests');
+  ensureDir(outDir);
+  ensureDir(audioDir);
+
+  let count = 0;
+  const dirs = fs.readdirSync(sessionsDir).filter(d => {
+    if (!d.startsWith('P')) return false;
+    try { return fs.statSync(path.join(sessionsDir, d)).isDirectory(); } catch { return false; }
+  });
+
+  for (const sessionId of dirs) {
+    const sessionPath = path.join(sessionsDir, sessionId);
+    const meta = readJSON(path.join(sessionPath, 'meta.json'));
+    if (!meta || !isQaProbe(meta)) continue;
+    if (meta.render_ok !== true) continue;
+
+    const wavPath = pickCanonicalWav(sessionPath);
+    if (!wavPath) continue;
+
+    const mp3Name = sessionId.toLowerCase() + '.mp3';
+    const mp3Path = path.join(audioDir, mp3Name);
+    if (!convertWavToMp3(wavPath, mp3Path)) continue;
+
+    const composition = getPracticeComposition(meta);
+    const componentIds = collectTestComponentIds(meta);
+    const label = buildHumanTestLabel(meta, sessionId);
+    const interactions = readJSONL(path.join(sessionPath, 'interactions.jsonl'));
+    const journal = interactions
+      .map(i => i.prose || i.full_response || '')
+      .filter(Boolean)
+      .join('\n\n');
+
+    const fm = {
+      title: `QA Test — ${label}`,
+      description: 'Hidden QA listening page for EMPI render probe verification.',
+      date: meta.started || meta.completed || new Date().toISOString(),
+      session_id: sessionId,
+      genre: (composition && composition.genre) || meta.genre || meta.domain || '',
+      audio: '/audio/tests/' + mp3Name,
+      render_status: 'success',
+      test_label: label,
+      creative_direction: (composition && composition.creative_direction) || null,
+      composition_template: (composition && composition.template_id) || null,
+      test_components: componentIds,
+      hide_from_home: true,
+      noindex: true,
+    };
+
+    const bodyParts = [
+      '## What This Test Is',
+      '',
+      label,
+    ];
+
+    if (composition && composition.creative_direction) {
+      bodyParts.push('', '## Full Prompt', '', composition.creative_direction);
+    }
+    if (componentIds.length > 0) {
+      bodyParts.push('', '## Selected Components', '', componentIds.map(id => `- ${id}`).join('\n'));
+    }
+    if (journal) {
+      bodyParts.push('', '## Session Notes', '', journal);
+    }
+
+    writeFile(path.join(outDir, slugify(sessionId) + '.md'), yamlFrontmatter(fm) + '\n\n' + bodyParts.join('\n') + '\n');
     count++;
   }
 
@@ -754,6 +874,7 @@ function generateMusic() {
     const sessionPath = path.join(sessionsDir, sessionId);
     const meta = readJSON(path.join(sessionPath, 'meta.json'));
     if (!meta) continue;
+    if (isQaProbe(meta)) continue;
 
     // Only include sessions where the render actually succeeded
     if (meta.render_ok !== true) { skipped++; continue; }
@@ -935,6 +1056,7 @@ console.log('  Output:', contentDir);
 console.log('');
 
 const journalCount = generateJournal();
+const testsCount = generateTests();
 const discoveryCount = generateDiscovery();
 const reflectionCount = generateReflections();
 const sketchCount = generateSketches();
@@ -949,7 +1071,7 @@ const statusOk = generateStatus();
 const sweptMusic = sweepStaleMusic();
 
 console.log('');
-console.log(`Summary: ${journalCount} journal, ${discoveryCount} discovery, ${reflectionCount} reflections (→journal), ${sketchCount} sketches, ${musicCount} music, status ${statusOk ? 'ok' : 'no data'}`);
+console.log(`Summary: ${journalCount} journal, ${testsCount} tests, ${discoveryCount} discovery, ${reflectionCount} reflections (→journal), ${sketchCount} sketches, ${musicCount} music, status ${statusOk ? 'ok' : 'no data'}`);
 if (sweptMusic > 0) console.log(`  Swept ${sweptMusic} stale music entries`);
 
 function sweepStaleMusic() {

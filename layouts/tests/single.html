@@ -1,0 +1,47 @@
+{{ define "main" }}
+<article class="single session-detail container">
+  <header>
+    <h1>{{ .Params.test_label | default .Title }}</h1>
+    <div class="session-meta">
+      <span class="badge badge-stage">QA Listening Test</span>
+      {{ if .Params.genre }}<span class="badge genre-{{ .Params.genre }}">{{ .Params.genre }}</span>{{ end }}
+      {{ if .Params.composition_template }}<span class="badge badge-stage">Template: {{ .Params.composition_template }}</span>{{ end }}
+      <time>{{ dateFormat "January 2, 2006" (time.In "America/Los_Angeles" .Date) }}</time>
+    </div>
+  </header>
+
+  {{ if .Params.audio }}
+  <section class="audio-section">
+    <h2>Audio</h2>
+    {{ partial "audio-player.html" (dict "src" .Params.audio "title" (.Params.test_label | default .Title)) }}
+  </section>
+  {{ end }}
+
+  {{ if .Params.creative_direction }}
+  <section class="intent-block">
+    <h2>Prompt</h2>
+    <blockquote class="intent">{{ .Params.creative_direction }}</blockquote>
+  </section>
+  {{ end }}
+
+  {{ if .Params.test_components }}
+  <section class="intent-block">
+    <h2>Selected Components</h2>
+    <ul>
+      {{ range .Params.test_components }}
+      <li><code>{{ . }}</code></li>
+      {{ end }}
+    </ul>
+  </section>
+  {{ end }}
+
+  {{ if .Content }}
+  <section class="journal-section">
+    <h2>Test Notes</h2>
+    <div class="content journal-body">
+      {{ .Content }}
+    </div>
+  </section>
+  {{ end }}
+</article>
+{{ end }}

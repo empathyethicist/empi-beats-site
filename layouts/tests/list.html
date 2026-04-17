@@ -1,0 +1,26 @@
+{{ define "main" }}
+<section class="section container">
+  <h1>{{ .Title }}</h1>
+  <div class="content">
+    {{ .Content }}
+  </div>
+  {{ if .Paginator.Pages }}
+  {{ range .Paginator.Pages }}
+  <article class="card session-practice">
+    <div class="card-header">
+      <h2><a href="{{ .RelPermalink }}">{{ .Params.test_label | default .Title }}</a></h2>
+      <div class="card-meta">
+        {{ if .Params.genre }}<span class="badge genre-{{ .Params.genre }}">{{ .Params.genre }}</span>{{ end }}
+        {{ if .Params.composition_template }}<span class="badge badge-stage">Template: {{ .Params.composition_template }}</span>{{ end }}
+        <time>{{ dateFormat "January 2, 2006" (time.In "America/Los_Angeles" .Date) }}</time>
+      </div>
+    </div>
+    {{ if .Params.creative_direction }}<blockquote class="intent">{{ .Params.creative_direction }}</blockquote>{{ end }}
+  </article>
+  {{ end }}
+  {{ template "_internal/pagination.html" . }}
+  {{ else }}
+  {{ partial "empty-state.html" (dict "message" "No QA listening tests yet.") }}
+  {{ end }}
+</section>
+{{ end }}
